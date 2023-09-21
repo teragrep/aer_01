@@ -1,0 +1,12 @@
+[Unit]
+Description=com.teragrep.aer_01
+
+[Service]
+ExecStart=/usr/lib/jvm/jre-11/bin/java \
+    -Dazure.namespace= \
+    -jar /opt/teragrep/aer_01/lib/aer_01.jar
+User=srv-aer_01
+WorkingDirectory=/opt/teragrep/aer_01/etc
+
+[Install]
+WantedBy=multi-user.target
