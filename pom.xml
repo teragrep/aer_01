@@ -211,8 +211,8 @@
             <exclude>README.adoc</exclude>
             <!-- logger configs -->
             <exclude>**/log4j2.xml</exclude>
-            <!-- internal -->
-            <exclude>Jenkinsfile</exclude>
+            <!-- Docker -->
+            <exclude>Dockerfile</exclude>
             <!-- rpm -->
             <exclude>rpm/**</exclude>
           </excludes>
