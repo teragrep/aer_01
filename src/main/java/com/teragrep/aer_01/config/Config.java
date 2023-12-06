@@ -45,65 +45,18 @@
  */
 package com.teragrep.aer_01.config;
 
+import java.util.Map;
 
-// copy from snw_01 with fixes
-final public class RelpConfig extends Config {
-
-    private final int connectionTimeout;
-    private final int readTimeout;
-    private final int writeTimeout;
-    private final int reconnectInterval;
-    private final int destinationPort;
-    private final String destinationAddress;
-
-    public RelpConfig() {
-        this.connectionTimeout = Integer.parseInt(getConfigValue("relp.connection.timeout", "5000"));
-        this.readTimeout = Integer.parseInt(getConfigValue("relp.transaction.read.timeout", "5000"));
-        this.writeTimeout = Integer.parseInt(getConfigValue("relp.transaction.write.timeout", "5000"));
-        this.reconnectInterval = Integer.parseInt(getConfigValue("relp.connection.retry.interval", "5000"));
-        this.destinationPort = Integer.parseInt(getConfigValue("relp.connection.port", "601"));
-        this.destinationAddress = getConfigValue("relp.connection.address", "localhost");
-    }
-
-    /**
-     * @return relp.connection.timeout
-     */
-    public int getConnectTimeout() {
-        return connectionTimeout;
-    }
-
-    /**
-     * @return relp.transaction.read.timeout
-     */
-    public int getReadTimeout() {
-        return readTimeout;
-    }
-
-    /**
-     * @return relp.transaction.write.timeout
-     */
-    public int getWriteTimeout() {
-        return writeTimeout;
-    }
-
-    /**
-     * @return relp.connection.retry.interval
-     */
-    public int getReconnectInterval() {
-        return reconnectInterval;
-    }
-
-    /**
-     * @return relp.connection.port
-     */
-    public int getRelpPort() {
-        return destinationPort;
-    }
-
-    /**
-     * @return relp.connection.address
-     */
-    public String getRelpAddress() {
-        return destinationAddress;
+class Config {
+    private static final Map<String, String> envValues = System.getenv();
+    String getConfigValue(String name, String fallback) {
+        // Check if CONFIG_VALUE environment variable exists, then check config.value and finally return fallback
+        return envValues.getOrDefault(
+                name.toUpperCase().replace(".", "_"), // azure.namespace -> AZURE_NAMESPACE
+                System.getProperty(
+                        name,
+                        fallback
+                )
+        );
     }
 }

@@ -45,29 +45,28 @@
  */
 package com.teragrep.aer_01.config;
 
-final public class SyslogConfig {
+final public class SyslogConfig extends Config {
 
     // TODO copy from snw_01
-
-    public final String hostname;
-    public final String appName;
+    private final String appName;
+    private final String hostname;
 
     public SyslogConfig() {
-        this.hostname = getHostname();
-        this.appName = getAppName();
+        this.appName = getConfigValue("syslog.appname","aer-01");
+        this.hostname = getConfigValue("syslog.hostname","localhost.localdomain");
     }
     /**
      * @return syslog.appname
      */
-    private String getAppName() {
-        return System.getProperty("syslog.appname","aer-01");
+    public String getAppName() {
+        return appName;
     }
 
     /**
      * @return syslog.hostname
      */
-    private String getHostname() {
-        return System.getProperty("syslog.hostname","localhost.localdomain");
+    public String getHostname() {
+        return hostname;
     }
 }
 

@@ -43,67 +43,30 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.aer_01.config;
+package com.teragrep.aer_01;
 
+import com.teragrep.aer_01.config.AzureConfig;
+import com.teragrep.aer_01.config.RelpConfig;
+import com.teragrep.aer_01.config.SyslogConfig;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-// copy from snw_01 with fixes
-final public class RelpConfig extends Config {
-
-    private final int connectionTimeout;
-    private final int readTimeout;
-    private final int writeTimeout;
-    private final int reconnectInterval;
-    private final int destinationPort;
-    private final String destinationAddress;
-
-    public RelpConfig() {
-        this.connectionTimeout = Integer.parseInt(getConfigValue("relp.connection.timeout", "5000"));
-        this.readTimeout = Integer.parseInt(getConfigValue("relp.transaction.read.timeout", "5000"));
-        this.writeTimeout = Integer.parseInt(getConfigValue("relp.transaction.write.timeout", "5000"));
-        this.reconnectInterval = Integer.parseInt(getConfigValue("relp.connection.retry.interval", "5000"));
-        this.destinationPort = Integer.parseInt(getConfigValue("relp.connection.port", "601"));
-        this.destinationAddress = getConfigValue("relp.connection.address", "localhost");
+public class ConfigTest {
+    @Test
+    public void testConfigFromEnv() {
+        AzureConfig azureConfig = new AzureConfig(); // AZURE_NAMESPACE comes from maven
+        Assertions.assertEquals("azure_namespace_from_env", azureConfig.getNamespaceName(), "Expected to get config from environment variable");
     }
-
-    /**
-     * @return relp.connection.timeout
-     */
-    public int getConnectTimeout() {
-        return connectionTimeout;
+    @Test
+    public void testConfigFromProperty() {
+        String expected = "testing.hostname.example.com";
+        System.setProperty("syslog.hostname", expected);
+        SyslogConfig syslogConfig = new SyslogConfig();
+        Assertions.assertEquals(expected, syslogConfig.getHostname(), "Expected to get config from property");
     }
-
-    /**
-     * @return relp.transaction.read.timeout
-     */
-    public int getReadTimeout() {
-        return readTimeout;
-    }
-
-    /**
-     * @return relp.transaction.write.timeout
-     */
-    public int getWriteTimeout() {
-        return writeTimeout;
-    }
-
-    /**
-     * @return relp.connection.retry.interval
-     */
-    public int getReconnectInterval() {
-        return reconnectInterval;
-    }
-
-    /**
-     * @return relp.connection.port
-     */
-    public int getRelpPort() {
-        return destinationPort;
-    }
-
-    /**
-     * @return relp.connection.address
-     */
-    public String getRelpAddress() {
-        return destinationAddress;
+    @Test
+    public void testConfigFallback() {
+        RelpConfig relpConfig = new RelpConfig();
+        Assertions.assertEquals(601, relpConfig.getRelpPort(), "Expected to get fallback value");
     }
 }

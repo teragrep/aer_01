@@ -76,14 +76,14 @@ public final class Main {
 // Create a blob container client that you use later to build an event processor client to receive and process events
             BlobContainerAsyncClient blobContainerAsyncClient = new BlobContainerClientBuilder()
                     .credential(credential)
-                    .endpoint(azureConfig.blobStorageEndpoint)
-                    .containerName(azureConfig.blobStorageContainerName)
+                    .endpoint(azureConfig.getBlobStorageEndpoint())
+                    .containerName(azureConfig.getBlobStorageContainerName())
                     .buildAsyncClient();
 
 // Create an event processor client to receive and process events and errors.
             EventProcessorClient eventProcessorClient = new EventProcessorClientBuilder()
-                    .fullyQualifiedNamespace(azureConfig.namespaceName)
-                    .eventHubName(azureConfig.namespaceName)
+                    .fullyQualifiedNamespace(azureConfig.getNamespaceName())
+                    .eventHubName(azureConfig.getEventHubName())
                     .consumerGroup(EventHubClientBuilder.DEFAULT_CONSUMER_GROUP_NAME)
                     .processEvent(PARTITION_PROCESSOR)
                     .processError(ERROR_HANDLER)

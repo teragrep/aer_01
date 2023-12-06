@@ -325,6 +325,9 @@
         <configuration>
           <parallel>all</parallel>
           <useUnlimitedThreads>true</useUnlimitedThreads>
+          <environmentVariables>
+            <AZURE_NAMESPACE>azure_namespace_from_env</AZURE_NAMESPACE>
+          </environmentVariables>
         </configuration>
       </plugin>
       <plugin>

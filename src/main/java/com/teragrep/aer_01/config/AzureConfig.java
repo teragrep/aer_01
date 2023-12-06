@@ -45,31 +45,31 @@
  */
 package com.teragrep.aer_01.config;
 
-final public class AzureConfig {
-    public final String namespaceName;
-    public final String eventHubName;
-    public final String blobStorageEndpoint;
-    public final String blobStorageContainerName;
+final public class AzureConfig extends Config {
+    private final String namespaceName;
+    private final String eventHubName;
+    private final String blobStorageEndpoint;
+    private final String blobStorageContainerName;
     public AzureConfig() {
-        this.namespaceName = getNamespaceName();
-        this.eventHubName = getEventHubName();
-        this.blobStorageEndpoint = getBlobStorageEndpoint();
-        this.blobStorageContainerName = getBlobStorageContainerName();
+        this.namespaceName = getConfigValue("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
+        this.eventHubName = getConfigValue("azure.eventhub", "<EVENT HUB NAME>");
+        this.blobStorageEndpoint = getConfigValue("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
+        this.blobStorageContainerName = getConfigValue("azure.blobstorage.container", "<CONTAINER NAME>");
     }
 
-    private String getNamespaceName() {
-        return System.getProperty("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
+    public String getNamespaceName() {
+        return namespaceName;
     }
 
-    private String getEventHubName() {
-        return System.getProperty("azure.eventhub", "<EVENT HUB NAME>");
+    public String getEventHubName() {
+        return eventHubName;
     }
 
-    private String getBlobStorageEndpoint() {
-        return System.getProperty("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
+    public String getBlobStorageEndpoint() {
+        return blobStorageEndpoint;
     }
 
-    private String getBlobStorageContainerName() {
-        return System.getProperty("azure.blobstorage.container", "<CONTAINER NAME>");
+    public String getBlobStorageContainerName() {
+        return blobStorageContainerName;
     }
 }
