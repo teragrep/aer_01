@@ -45,31 +45,16 @@
  */
 package com.teragrep.aer_01.config;
 
-final public class AzureConfig extends Config {
-    private final String namespaceName;
-    private final String eventHubName;
-    private final String blobStorageEndpoint;
-    private final String blobStorageContainerName;
+final public class AzureConfig {
+    public final String namespaceName;
+    public final String eventHubName;
+    public final String blobStorageEndpoint;
+    public final String blobStorageContainerName;
     public AzureConfig() {
-        this.namespaceName = getConfigValue("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
-        this.eventHubName = getConfigValue("azure.eventhub", "<EVENT HUB NAME>");
-        this.blobStorageEndpoint = getConfigValue("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
-        this.blobStorageContainerName = getConfigValue("azure.blobstorage.container", "<CONTAINER NAME>");
-    }
-
-    public String getNamespaceName() {
-        return namespaceName;
-    }
-
-    public String getEventHubName() {
-        return eventHubName;
-    }
-
-    public String getBlobStorageEndpoint() {
-        return blobStorageEndpoint;
-    }
-
-    public String getBlobStorageContainerName() {
-        return blobStorageContainerName;
+        final ConfigHandler configHandler = new ConfigHandler();
+        this.namespaceName = configHandler.getConfigValue("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
+        this.eventHubName = configHandler.getConfigValue("azure.eventhub", "<EVENT HUB NAME>");
+        this.blobStorageEndpoint = configHandler.getConfigValue("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
+        this.blobStorageContainerName = configHandler.getConfigValue("azure.blobstorage.container", "<CONTAINER NAME>");
     }
 }

@@ -68,12 +68,12 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
 
         this.output = new Output(
                 "defaultOutput",
-                relpConfig.getRelpAddress(),
-                relpConfig.getRelpPort(),
-                relpConfig.getConnectTimeout(),
-                relpConfig.getReadTimeout(),
-                relpConfig.getWriteTimeout(),
-                relpConfig.getReconnectInterval(),
+                relpConfig.destinationAddress,
+                relpConfig.destinationPort,
+                relpConfig.connectionTimeout,
+                relpConfig.readTimeout,
+                relpConfig.writeTimeout,
+                relpConfig.reconnectInterval,
                 new MetricRegistry()
         );
 
@@ -122,8 +122,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         */
         SyslogMessage syslogMessage = new SyslogMessage()
                 .withTimestamp(eventContext.getEventData().getEnqueuedTime())
-                .withHostname(syslogConfig.getHostname())
-                .withAppName(syslogConfig.getAppName())
+                .withHostname(syslogConfig.hostname)
+                .withAppName(syslogConfig.appName)
                 .withSDElement(sdId)
                 //.withSDElement(sdCorId)
                 .withMsgId(eventContext.getEventData().getSequenceNumber().toString())

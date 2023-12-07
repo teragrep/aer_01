@@ -55,18 +55,18 @@ public class ConfigTest {
     @Test
     public void testConfigFromEnv() {
         AzureConfig azureConfig = new AzureConfig(); // AZURE_NAMESPACE comes from maven
-        Assertions.assertEquals("azure_namespace_from_env", azureConfig.getNamespaceName(), "Expected to get config from environment variable");
+        Assertions.assertEquals("azure_namespace_from_env", azureConfig.namespaceName, "Expected to get config from environment variable");
     }
     @Test
     public void testConfigFromProperty() {
         String expected = "testing.hostname.example.com";
         System.setProperty("syslog.hostname", expected);
         SyslogConfig syslogConfig = new SyslogConfig();
-        Assertions.assertEquals(expected, syslogConfig.getHostname(), "Expected to get config from property");
+        Assertions.assertEquals(expected, syslogConfig.hostname, "Expected to get config from property");
     }
     @Test
     public void testConfigFallback() {
         RelpConfig relpConfig = new RelpConfig();
-        Assertions.assertEquals(601, relpConfig.getRelpPort(), "Expected to get fallback value");
+        Assertions.assertEquals(601, relpConfig.destinationPort, "Expected to get fallback value");
     }
 }

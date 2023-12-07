@@ -47,7 +47,7 @@ package com.teragrep.aer_01.config;
 
 import java.util.Map;
 
-class Config {
+class ConfigHandler {
     private static final Map<String, String> envValues = System.getenv();
     String getConfigValue(String name, String fallback) {
         // Check if CONFIG_VALUE environment variable exists, then check config.value and finally return fallback
