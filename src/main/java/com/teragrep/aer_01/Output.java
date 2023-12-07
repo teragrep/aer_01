@@ -97,13 +97,13 @@ final class Output implements Consumer<byte[]>, AutoCloseable {
         this.relpConnection.setReadTimeout(readTimeout);
         this.relpConnection.setWriteTimeout(writeTimeout);
 
-        this.records = metricRegistry.counter(name(Output.class, "<[" + name + ">]", "records"));
-        this.bytes = metricRegistry.counter(name(Output.class, "<[" + name + ">]", "bytes"));
-        this.resends = metricRegistry.counter(name(Output.class, "<[" + name + ">]", "resends"));
-        this.connects = metricRegistry.counter(name(Output.class, "<[" + name + ">]", "connects"));
-        this.retriedConnects = metricRegistry.counter(name(Output.class, "<[" + name + ">]", "retriedConnects"));
-        this.sendLatency = metricRegistry.timer(name(Output.class, "<[" + name + ">]", "sendLatency"));
-        this.connectLatency = metricRegistry.timer(name(Output.class, "<[" + name + ">]", "connectLatency"));
+        this.records = metricRegistry.counter(name(Output.class, "<[" + name + "]>", "records"));
+        this.bytes = metricRegistry.counter(name(Output.class, "<[" + name + "]>", "bytes"));
+        this.resends = metricRegistry.counter(name(Output.class, "<[" + name + "]>", "resends"));
+        this.connects = metricRegistry.counter(name(Output.class, "<[" + name + "]>", "connects"));
+        this.retriedConnects = metricRegistry.counter(name(Output.class, "<[" + name + "]>", "retriedConnects"));
+        this.sendLatency = metricRegistry.timer(name(Output.class, "<[" + name + "]>", "sendLatency"));
+        this.connectLatency = metricRegistry.timer(name(Output.class, "<[" + name + "]>", "connectLatency"));
 
         connect();
     }
