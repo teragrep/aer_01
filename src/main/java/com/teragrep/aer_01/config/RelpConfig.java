@@ -46,11 +46,11 @@
 package com.teragrep.aer_01.config;
 
 
-import com.teragrep.aer_01.config.source.ConfigSource;
+import com.teragrep.aer_01.config.source.Sourceable;
 
 // copy from snw_01 with fixes
 final public class RelpConfig {
-    public final ConfigSource configSource;
+    public final Sourceable configSource;
     public final int connectionTimeout;
     public final int readTimeout;
     public final int writeTimeout;
@@ -58,8 +58,8 @@ final public class RelpConfig {
     public final int destinationPort;
     public final String destinationAddress;
 
-    public RelpConfig() {
-        this.configSource = new ConfigSource();
+    public RelpConfig(Sourceable configSource) {
+        this.configSource = configSource;
         this.connectionTimeout = getConnectTimeout();
         this.readTimeout = getReadTimeout();
         this.writeTimeout = getWriteTimeout();

@@ -45,17 +45,17 @@
  */
 package com.teragrep.aer_01.config;
 
-import com.teragrep.aer_01.config.source.ConfigSource;
+import com.teragrep.aer_01.config.source.Sourceable;
 
 final public class AzureConfig {
-    public final ConfigSource configSource;
+    public final Sourceable configSource;
     public final String namespaceName;
     public final String eventHubName;
     public final String blobStorageEndpoint;
     public final String blobStorageContainerName;
 
-    public AzureConfig() {
-        this.configSource = new ConfigSource();
+    public AzureConfig(Sourceable configSource) {
+        this.configSource = configSource;
         this.namespaceName = getNamespaceName();
         this.eventHubName = getEventHubName();
         this.blobStorageEndpoint = getBlobStorageEndpoint();

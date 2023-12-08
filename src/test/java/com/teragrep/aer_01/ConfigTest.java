@@ -43,31 +43,35 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.aer_01.config.source;
+package com.teragrep.aer_01;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.teragrep.aer_01.config.AzureConfig;
+import com.teragrep.aer_01.config.RelpConfig;
+import com.teragrep.aer_01.config.SyslogConfig;
+import com.teragrep.aer_01.config.source.EnvironmentSource;
+import com.teragrep.aer_01.config.source.PropertySource;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import java.util.Map;
-
-public class EnvironmentSource implements Sourceable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnvironmentSource.class);
-
-    private final Map<String, String> envValues = System.getenv();
-
-    @Override
-    public String source(String name, String defaultValue) {
-        String variable = name.toUpperCase().replace(".", "_");
-        LOGGER.debug("sourcing name <[{}]> as environment variable <[{}]>", name, variable);
-        String rv =  envValues.getOrDefault(variable, defaultValue);
-        LOGGER.debug("sourced value <[{}]> for variable <[{}]>", rv, variable);
-        return rv;
+public class ConfigTest {
+    @Test
+    public void testConfigFromEnv() {
+        AzureConfig azureConfig = new AzureConfig(new EnvironmentSource()); // AZURE_NAMESPACE comes from maven
+        Assertions.assertEquals("azure_namespace_from_env", azureConfig.namespaceName, "Expected to get config from environment variable");
     }
 
-    @Override
-    public String toString() {
-        return "EnvironmentSource{" +
-                "envValues=" + envValues +
-                '}';
+    @Test
+    public void testConfigFromProperty() {
+        String expected = "testing.hostname.example.com";
+        System.setProperty("syslog.hostname", expected);
+        SyslogConfig syslogConfig = new SyslogConfig(new PropertySource());
+        Assertions.assertEquals(expected, syslogConfig.hostname, "Expected to get config from property");
+        System.clearProperty("syslog.hostname");
+    }
+
+    @Test
+    public void testConfigFallback() {
+        RelpConfig relpConfig = new RelpConfig(new EnvironmentSource());
+        Assertions.assertEquals(601, relpConfig.destinationPort, "Expected to get fallback value");
     }
 }

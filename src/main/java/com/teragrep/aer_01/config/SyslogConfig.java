@@ -45,16 +45,16 @@
  */
 package com.teragrep.aer_01.config;
 
-import com.teragrep.aer_01.config.source.ConfigSource;
+import com.teragrep.aer_01.config.source.Sourceable;
 
 final public class SyslogConfig {
     // TODO this is a copy from snw_01, with configSource
-    public final ConfigSource configSource;
+    public final Sourceable configSource;
     public final String hostname;
     public final String appName;
 
-    public SyslogConfig() {
-        this.configSource = new ConfigSource();
+    public SyslogConfig(Sourceable configSource) {
+        this.configSource = configSource;
         this.hostname = getHostname();
         this.appName = getAppName();
     }
