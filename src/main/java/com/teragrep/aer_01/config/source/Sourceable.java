@@ -43,38 +43,8 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.aer_01.config;
+package com.teragrep.aer_01.config.source;
 
-import com.teragrep.aer_01.config.source.Sourceable;
-
-final public class AzureConfig {
-    public final Sourceable configSource;
-    public final String namespaceName;
-    public final String eventHubName;
-    public final String blobStorageEndpoint;
-    public final String blobStorageContainerName;
-
-    public AzureConfig(Sourceable configSource) {
-        this.configSource = configSource;
-        this.namespaceName = getNamespaceName();
-        this.eventHubName = getEventHubName();
-        this.blobStorageEndpoint = getBlobStorageEndpoint();
-        this.blobStorageContainerName = getBlobStorageContainerName();
-    }
-
-    private String getNamespaceName() {
-        return configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
-    }
-
-    private String getEventHubName() {
-        return configSource.source("azure.eventhub", "<EVENT HUB NAME>");
-    }
-
-    private String getBlobStorageEndpoint() {
-        return configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
-    }
-
-    private String getBlobStorageContainerName() {
-        return configSource.source("azure.blobstorage.container", "<CONTAINER NAME>");
-    }
+public interface Sourceable {
+    String source(String name, String defaultValue);
 }

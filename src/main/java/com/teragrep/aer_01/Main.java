@@ -56,6 +56,9 @@ import com.azure.messaging.eventhubs.checkpointstore.blob.BlobCheckpointStore;
 import com.azure.storage.blob.BlobContainerAsyncClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
 import com.teragrep.aer_01.config.AzureConfig;
+import com.teragrep.aer_01.config.source.EnvironmentSource;
+import com.teragrep.aer_01.config.source.PropertySource;
+import com.teragrep.aer_01.config.source.Sourceable;
 
 import java.io.IOException;
 
@@ -64,8 +67,10 @@ import java.io.IOException;
 public final class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        try (final EventContextConsumer PARTITION_PROCESSOR = new EventContextConsumer()) {
-            AzureConfig azureConfig = new AzureConfig();
+        final Sourceable configSource = getConfigSource();
+
+        try (final EventContextConsumer PARTITION_PROCESSOR = new EventContextConsumer(configSource)) {
+            AzureConfig azureConfig = new AzureConfig(configSource);
             final ErrorContextConsumer ERROR_HANDLER = new ErrorContextConsumer();
 
 // create a token using the default Azure credential
@@ -97,5 +102,22 @@ public final class Main {
 
             eventProcessorClient.stop();
         }
+    }
+
+    private static Sourceable getConfigSource() {
+        String type = System.getProperty("config.source", "properties");
+
+        Sourceable rv;
+        if ("properties".equals(type)) {
+            rv = new PropertySource();
+        }
+        else if ("environment".equals(type)) {
+            rv = new EnvironmentSource();
+        }
+        else {
+            throw new IllegalArgumentException("config.source not within supported types: [properties, environment]");
+        }
+
+        return rv;
     }
 }

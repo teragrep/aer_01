@@ -43,38 +43,35 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.aer_01.config;
+package com.teragrep.aer_01;
 
-import com.teragrep.aer_01.config.source.Sourceable;
+import com.teragrep.aer_01.config.AzureConfig;
+import com.teragrep.aer_01.config.RelpConfig;
+import com.teragrep.aer_01.config.SyslogConfig;
+import com.teragrep.aer_01.config.source.EnvironmentSource;
+import com.teragrep.aer_01.config.source.PropertySource;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-final public class AzureConfig {
-    public final Sourceable configSource;
-    public final String namespaceName;
-    public final String eventHubName;
-    public final String blobStorageEndpoint;
-    public final String blobStorageContainerName;
-
-    public AzureConfig(Sourceable configSource) {
-        this.configSource = configSource;
-        this.namespaceName = getNamespaceName();
-        this.eventHubName = getEventHubName();
-        this.blobStorageEndpoint = getBlobStorageEndpoint();
-        this.blobStorageContainerName = getBlobStorageContainerName();
+public class ConfigTest {
+    @Test
+    public void testConfigFromEnv() {
+        AzureConfig azureConfig = new AzureConfig(new EnvironmentSource()); // AZURE_NAMESPACE comes from maven
+        Assertions.assertEquals("azure_namespace_from_env", azureConfig.namespaceName, "Expected to get config from environment variable");
     }
 
-    private String getNamespaceName() {
-        return configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
+    @Test
+    public void testConfigFromProperty() {
+        String expected = "testing.hostname.example.com";
+        System.setProperty("syslog.hostname", expected);
+        SyslogConfig syslogConfig = new SyslogConfig(new PropertySource());
+        Assertions.assertEquals(expected, syslogConfig.hostname, "Expected to get config from property");
+        System.clearProperty("syslog.hostname");
     }
 
-    private String getEventHubName() {
-        return configSource.source("azure.eventhub", "<EVENT HUB NAME>");
-    }
-
-    private String getBlobStorageEndpoint() {
-        return configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
-    }
-
-    private String getBlobStorageContainerName() {
-        return configSource.source("azure.blobstorage.container", "<CONTAINER NAME>");
+    @Test
+    public void testConfigFallback() {
+        RelpConfig relpConfig = new RelpConfig(new EnvironmentSource());
+        Assertions.assertEquals(601, relpConfig.destinationPort, "Expected to get fallback value");
     }
 }

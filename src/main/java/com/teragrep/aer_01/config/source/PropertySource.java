@@ -43,38 +43,25 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.aer_01.config;
+package com.teragrep.aer_01.config.source;
 
-import com.teragrep.aer_01.config.source.Sourceable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-final public class AzureConfig {
-    public final Sourceable configSource;
-    public final String namespaceName;
-    public final String eventHubName;
-    public final String blobStorageEndpoint;
-    public final String blobStorageContainerName;
+import java.util.Properties;
 
-    public AzureConfig(Sourceable configSource) {
-        this.configSource = configSource;
-        this.namespaceName = getNamespaceName();
-        this.eventHubName = getEventHubName();
-        this.blobStorageEndpoint = getBlobStorageEndpoint();
-        this.blobStorageContainerName = getBlobStorageContainerName();
+public final class PropertySource implements Sourceable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PropertySource.class);
+    private final Properties properties;
+
+    public PropertySource() {
+        this.properties = System.getProperties();
     }
-
-    private String getNamespaceName() {
-        return configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
-    }
-
-    private String getEventHubName() {
-        return configSource.source("azure.eventhub", "<EVENT HUB NAME>");
-    }
-
-    private String getBlobStorageEndpoint() {
-        return configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
-    }
-
-    private String getBlobStorageContainerName() {
-        return configSource.source("azure.blobstorage.container", "<CONTAINER NAME>");
+    @Override
+    public String source(String name, String defaultValue) {
+        LOGGER.debug("sourcing property name <[{}]>", name);
+        String rv = properties.getProperty(name, defaultValue);
+        LOGGER.debug("sourced value <[{}]> for property name <[{}]>", rv, name);
+        return rv;
     }
 }

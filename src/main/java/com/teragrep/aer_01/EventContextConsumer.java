@@ -49,6 +49,7 @@ import com.azure.messaging.eventhubs.models.EventContext;
 import com.codahale.metrics.MetricRegistry;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.aer_01.config.SyslogConfig;
+import com.teragrep.aer_01.config.source.Sourceable;
 import com.teragrep.rlo_14.SDElement;
 import com.teragrep.rlo_14.SyslogMessage;
 
@@ -63,8 +64,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     private final Output output;
     private final String realHostName;
     private final SyslogConfig syslogConfig;
-    EventContextConsumer() {
-        RelpConfig relpConfig = new RelpConfig();
+    EventContextConsumer(Sourceable configSource) {
+        RelpConfig relpConfig = new RelpConfig(configSource);
 
         this.output = new Output(
                 "defaultOutput",
@@ -78,7 +79,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         );
 
         this.realHostName = getRealHostName();
-        this.syslogConfig = new SyslogConfig();
+        this.syslogConfig = new SyslogConfig(configSource);
     }
 
     private String getRealHostName() {
