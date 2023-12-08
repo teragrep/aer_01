@@ -83,7 +83,7 @@ public final class Main {
 // Create an event processor client to receive and process events and errors.
             EventProcessorClient eventProcessorClient = new EventProcessorClientBuilder()
                     .fullyQualifiedNamespace(azureConfig.namespaceName)
-                    .eventHubName(azureConfig.namespaceName)
+                    .eventHubName(azureConfig.eventHubName)
                     .consumerGroup(EventHubClientBuilder.DEFAULT_CONSUMER_GROUP_NAME)
                     .processEvent(PARTITION_PROCESSOR)
                     .processError(ERROR_HANDLER)
