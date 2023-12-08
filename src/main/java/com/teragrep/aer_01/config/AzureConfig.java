@@ -45,12 +45,17 @@
  */
 package com.teragrep.aer_01.config;
 
+import com.teragrep.aer_01.config.source.ConfigSource;
+
 final public class AzureConfig {
+    public final ConfigSource configSource;
     public final String namespaceName;
     public final String eventHubName;
     public final String blobStorageEndpoint;
     public final String blobStorageContainerName;
+
     public AzureConfig() {
+        this.configSource = new ConfigSource();
         this.namespaceName = getNamespaceName();
         this.eventHubName = getEventHubName();
         this.blobStorageEndpoint = getBlobStorageEndpoint();
@@ -58,18 +63,18 @@ final public class AzureConfig {
     }
 
     private String getNamespaceName() {
-        return System.getProperty("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
+        return configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net");
     }
 
     private String getEventHubName() {
-        return System.getProperty("azure.eventhub", "<EVENT HUB NAME>");
+        return configSource.source("azure.eventhub", "<EVENT HUB NAME>");
     }
 
     private String getBlobStorageEndpoint() {
-        return System.getProperty("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
+        return configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net");
     }
 
     private String getBlobStorageContainerName() {
-        return System.getProperty("azure.blobstorage.container", "<CONTAINER NAME>");
+        return configSource.source("azure.blobstorage.container", "<CONTAINER NAME>");
     }
 }

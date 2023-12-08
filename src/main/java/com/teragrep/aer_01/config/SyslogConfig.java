@@ -45,14 +45,16 @@
  */
 package com.teragrep.aer_01.config;
 
+import com.teragrep.aer_01.config.source.ConfigSource;
+
 final public class SyslogConfig {
-
-    // TODO copy from snw_01
-
+    // TODO this is a copy from snw_01, with configSource
+    public final ConfigSource configSource;
     public final String hostname;
     public final String appName;
 
     public SyslogConfig() {
+        this.configSource = new ConfigSource();
         this.hostname = getHostname();
         this.appName = getAppName();
     }
@@ -60,14 +62,14 @@ final public class SyslogConfig {
      * @return syslog.appname
      */
     private String getAppName() {
-        return System.getProperty("syslog.appname","aer-01");
+        return configSource.source("syslog.appname","aer-01");
     }
 
     /**
      * @return syslog.hostname
      */
     private String getHostname() {
-        return System.getProperty("syslog.hostname","localhost.localdomain");
+        return configSource.source("syslog.hostname","localhost.localdomain");
     }
 }
 
