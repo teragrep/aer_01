@@ -205,8 +205,7 @@
             <exclude>.gitignore</exclude>
             <exclude>.gitmodules</exclude>
             <!-- ci -->
-            <exclude>.github/workflows/*.yml</exclude>
-            <exclude>.github/workflows/*.yaml</exclude>
+            <exclude>.github/**</exclude>
             <!-- readme -->
             <exclude>README.adoc</exclude>
             <!-- logger configs -->
