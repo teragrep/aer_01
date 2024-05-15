@@ -59,6 +59,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 final class EventContextConsumer implements AutoCloseable, Consumer<EventContext> {
@@ -96,9 +97,17 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
 
     @Override
     public void accept(EventContext eventContext) {
+
+        String eventUuid = eventContext.getEventData().getMessageId();
+
+        // FIXME proper handling of non-provided uuids
+        if (eventUuid == null) {
+            eventUuid = "aer_01="+UUID.randomUUID();
+        }
+
         SDElement sdId = new SDElement("event_id@48577")
                 .addSDParam("hostname", realHostName)
-                .addSDParam("uuid", eventContext.getEventData().getMessageId())
+                .addSDParam("uuid", eventUuid)
                 .addSDParam("unixtime", Instant.now().toString())
                 .addSDParam("id_source", "source");
         /*
