@@ -50,7 +50,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.aer_01.config.SyslogConfig;
 import com.teragrep.aer_01.config.source.Sourceable;
+import com.teragrep.rlo_14.Facility;
 import com.teragrep.rlo_14.SDElement;
+import com.teragrep.rlo_14.Severity;
 import com.teragrep.rlo_14.SyslogMessage;
 
 import java.net.InetAddress;
@@ -122,6 +124,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         eventContext.getEventData().getProperties();
         */
         SyslogMessage syslogMessage = new SyslogMessage()
+                .withSeverity(Severity.INFORMATIONAL)
+                .withFacility(Facility.LOCAL0)
                 .withTimestamp(eventContext.getEventData().getEnqueuedTime())
                 .withHostname(syslogConfig.hostname)
                 .withAppName(syslogConfig.appName)
