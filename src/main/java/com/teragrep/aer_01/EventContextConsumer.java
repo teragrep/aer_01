@@ -46,7 +46,8 @@
 package com.teragrep.aer_01;
 
 import com.azure.messaging.eventhubs.models.EventContext;
-import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.*;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.aer_01.config.SyslogConfig;
 import com.teragrep.aer_01.config.source.Sourceable;
@@ -54,20 +55,41 @@ import com.teragrep.rlo_14.Facility;
 import com.teragrep.rlo_14.SDElement;
 import com.teragrep.rlo_14.Severity;
 import com.teragrep.rlo_14.SyslogMessage;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 final class EventContextConsumer implements AutoCloseable, Consumer<EventContext> {
 
     private final Output output;
     private final String realHostName;
     private final SyslogConfig syslogConfig;
-    EventContextConsumer(Sourceable configSource) {
+    private final MetricRegistry metricRegistry = new MetricRegistry();
+    private final JmxReporter jmxReporter;
+    private final Slf4jReporter slf4jReporter;
+    private final Server jettyServer;
+
+    // metrics
+    private int records;
+    private long allSize;
+
+    private final MetricRegistry.MetricSupplier<Histogram> histogramSupplier;
+
+    EventContextConsumer(Sourceable configSource, int prometheusPort) {
         RelpConfig relpConfig = new RelpConfig(configSource);
 
         this.output = new Output(
@@ -78,11 +100,24 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
                 relpConfig.readTimeout,
                 relpConfig.writeTimeout,
                 relpConfig.reconnectInterval,
-                new MetricRegistry()
+                metricRegistry
         );
 
         this.realHostName = getRealHostName();
         this.syslogConfig = new SyslogConfig(configSource);
+
+        this.jmxReporter = JmxReporter.forRegistry(metricRegistry).build();
+        this.slf4jReporter = Slf4jReporter
+                .forRegistry(metricRegistry)
+                .outputTo(LoggerFactory.getLogger(EventContextConsumer.class))
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build();
+        jettyServer = new Server(prometheusPort);
+        handleMetrics();
+
+        histogramSupplier = () -> new Histogram(new UniformReservoir());
+        metricRegistry.register(name(EventContextConsumer.class, "estimated-depth"), (Gauge<Long>) () -> (allSize / records) / records);
     }
 
     private String getRealHostName() {
@@ -95,8 +130,46 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         return hostname;
     }
 
+    private void handleMetrics() {
+        this.jmxReporter.start();
+        this.slf4jReporter.start(1, TimeUnit.MINUTES);
+
+        // prometheus-exporter
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
+
+        ServletContextHandler context = new ServletContextHandler();
+        context.setContextPath("/");
+        jettyServer.setHandler(context);
+
+        MetricsServlet metricsServlet = new MetricsServlet();
+        ServletHolder servletHolder = new ServletHolder(metricsServlet);
+        context.addServlet(servletHolder, "/metrics");
+
+        // Start the webserver.
+        try {
+            jettyServer.start();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void accept(EventContext eventContext) {
+        int messageLength = eventContext.getEventData().getBody().length;
+        String partitionId = eventContext.getPartitionContext().getPartitionId();
+
+        records++;
+        allSize = allSize + messageLength;
+
+        Histogram latency = metricRegistry.histogram(name(EventContextConsumer.class, "latency", partitionId), histogramSupplier);
+        Histogram offsetDif = metricRegistry.histogram(name(EventContextConsumer.class, "offset-difference"), histogramSupplier);
+        Counter depth = metricRegistry.counter(name(EventContextConsumer.class, "depth", partitionId));
+
+        // latency as seconds
+        latency.update(Instant.now().getEpochSecond() - eventContext.getEventData().getEnqueuedTime().getEpochSecond());
+        offsetDif.update(eventContext.getEventData().getOffset() - eventContext.getLastEnqueuedEventProperties().getOffset());
+        depth.inc(messageLength);
 
         String eventUuid = eventContext.getEventData().getMessageId();
 
@@ -151,7 +224,10 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         output.close();
+        slf4jReporter.close();
+        jmxReporter.close();
+        jettyServer.stop();
     }
 }
