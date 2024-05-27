@@ -121,11 +121,13 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         Long offset = eventContext.getEventData().getOffset();
         Instant enqueuedTime = eventContext.getEventData().getEnqueuedTime();
         String partitionKey = eventContext.getEventData().getPartitionKey();
+        String correlationId = eventContext.getEventData().getCorrelationId();
         Map<String, Object> properties = eventContext.getEventData().getProperties();
         SDElement sdEvent = new SDElement("aer_01_event@48577")
                 .addSDParam("offset", offset == null ? "" : String.valueOf(offset))
                 .addSDParam("enqueued_time", enqueuedTime == null ? "" : enqueuedTime.toString())
-                .addSDParam("partition_key", partitionKey == null ? "" : partitionKey);
+                .addSDParam("partition_key", partitionKey == null ? "" : partitionKey)
+                .addSDParam("correlation_id", correlationId == null ? "" : correlationId);
         properties.forEach((key, value) -> sdEvent.addSDParam("property_" + key, value.toString()));
         /*
         // TODO add this too as SDElement
