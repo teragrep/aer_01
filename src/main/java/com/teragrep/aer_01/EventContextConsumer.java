@@ -110,15 +110,15 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
                 .addSDParam("uuid", eventUuid)
                 .addSDParam("unixtime", Instant.now().toString())
                 .addSDParam("id_source", "source");
+
+        SDElement sdAzure = new SDElement("aer_01_azure@48577")
+                .addSDParam("fully_qualified_namespace", eventContext.getPartitionContext().getFullyQualifiedNamespace())
+                .addSDParam("eventhub_name", eventContext.getPartitionContext().getEventHubName())
+                .addSDParam("partition_id", eventContext.getPartitionContext().getPartitionId())
+                .addSDParam("consumer_group", eventContext.getPartitionContext().getConsumerGroup());
         /*
         // TODO add this too as SDElement
         SDElement sdCorId = new SDElement("id@123").addSDParam("corId", eventContext.getEventData().getCorrelationId());
-
-        // TODO add azure stuff
-        eventContext.getPartitionContext().getFullyQualifiedNamespace();
-        eventContext.getPartitionContext().getEventHubName();
-        eventContext.getPartitionContext().getPartitionId();
-        eventContext.getPartitionContext().getConsumerGroup();
 
         // TODO metrics about these vs last retrieved, these are tracked per partition!:
         eventContext.getLastEnqueuedEventProperties().getEnqueuedTime();
@@ -139,6 +139,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
                 .withHostname(syslogConfig.hostname)
                 .withAppName(syslogConfig.appName)
                 .withSDElement(sdId)
+                .withSDElement(sdAzure)
                 //.withSDElement(sdCorId)
                 .withMsgId(eventContext.getEventData().getSequenceNumber().toString())
                 .withMsg(eventContext.getEventData().getBodyAsString());
