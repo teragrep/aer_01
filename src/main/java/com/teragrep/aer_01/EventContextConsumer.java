@@ -162,8 +162,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", partitionId), () -> new Gauge<Long>() {
             @Override
             public Long getValue() {
-                return eventContext.getLastEnqueuedEventProperties().getEnqueuedTime().getEpochSecond()
-                        - eventContext.getEventData().getEnqueuedTime().getEpochSecond();
+                return Instant.now().getEpochSecond() - eventContext.getEventData().getEnqueuedTime().getEpochSecond();
             }
         });
         metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", partitionId), () -> new Gauge<Long>() {
@@ -196,6 +195,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         eventContext.getPartitionContext().getConsumerGroup();
 
         // TODO metrics about these vs last retrieved, these are tracked per partition!:
+        eventContext.getLastEnqueuedEventProperties().getEnqueuedTime();
         eventContext.getLastEnqueuedEventProperties().getSequenceNumber();
         eventContext.getLastEnqueuedEventProperties().getRetrievalTime(); // null if not retrieved
 
