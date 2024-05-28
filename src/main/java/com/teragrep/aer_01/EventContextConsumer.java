@@ -87,8 +87,6 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     private int records;
     private long allSize;
 
-    private final MetricRegistry.MetricSupplier<Histogram> histogramSupplier;
-
     EventContextConsumer(Sourceable configSource, int prometheusPort) {
         RelpConfig relpConfig = new RelpConfig(configSource);
 
@@ -114,10 +112,9 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
         jettyServer = new Server(prometheusPort);
-        handleMetrics();
+        startMetrics();
 
-        histogramSupplier = () -> new Histogram(new UniformReservoir());
-        metricRegistry.register(name(EventContextConsumer.class, "estimated-depth"), (Gauge<Long>) () -> (allSize / records) / records);
+        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"), (Gauge<Long>) () -> (allSize / records) / records);
     }
 
     private String getRealHostName() {
@@ -130,7 +127,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         return hostname;
     }
 
-    private void handleMetrics() {
+    private void startMetrics() {
         this.jmxReporter.start();
         this.slf4jReporter.start(1, TimeUnit.MINUTES);
 
@@ -162,14 +159,19 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         records++;
         allSize = allSize + messageLength;
 
-        Histogram latency = metricRegistry.histogram(name(EventContextConsumer.class, "latency", partitionId), histogramSupplier);
-        Histogram offsetDif = metricRegistry.histogram(name(EventContextConsumer.class, "offset-difference"), histogramSupplier);
-        Counter depth = metricRegistry.counter(name(EventContextConsumer.class, "depth", partitionId));
-
-        // latency as seconds
-        latency.update(Instant.now().getEpochSecond() - eventContext.getEventData().getEnqueuedTime().getEpochSecond());
-        offsetDif.update(eventContext.getEventData().getOffset() - eventContext.getLastEnqueuedEventProperties().getOffset());
-        depth.inc(messageLength);
+        metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", partitionId), () -> new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return eventContext.getLastEnqueuedEventProperties().getEnqueuedTime().getEpochSecond()
+                        - eventContext.getEventData().getEnqueuedTime().getEpochSecond();
+            }
+        });
+        metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", partitionId), () -> new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
+            }
+        });
 
         String eventUuid = eventContext.getEventData().getMessageId();
 
@@ -194,14 +196,10 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         eventContext.getPartitionContext().getConsumerGroup();
 
         // TODO metrics about these vs last retrieved, these are tracked per partition!:
-        eventContext.getLastEnqueuedEventProperties().getEnqueuedTime();
         eventContext.getLastEnqueuedEventProperties().getSequenceNumber();
-        eventContext.getLastEnqueuedEventProperties().getOffset();
         eventContext.getLastEnqueuedEventProperties().getRetrievalTime(); // null if not retrieved
 
         // TODO compare these to above
-        eventContext.getEventData().getOffset();
-        eventContext.getEventData().getEnqueuedTime();
         eventContext.getEventData().getPartitionKey();
         eventContext.getEventData().getProperties();
         */
