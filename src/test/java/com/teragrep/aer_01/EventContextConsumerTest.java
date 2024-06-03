@@ -69,10 +69,9 @@ public class EventContextConsumerTest {
         final MetricRegistry metricRegistry = new MetricRegistry();
 
         try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new Output.FakeOutput(), metricRegistry, prometheusPort)) {
-            EventContext eventContext = eventContextFactory.create();
-            eventContextConsumer.accept(eventContext);
+            EventContext eventContext;
             final double records = 10;
-            for (int i = 0; i < records - 1; i++) {
+            for (int i = 0; i < records; i++) {
                 eventContext = eventContextFactory.create();
                 eventContextConsumer.accept(eventContext);
             }
@@ -97,12 +96,13 @@ public class EventContextConsumerTest {
         final MetricRegistry metricRegistry = new MetricRegistry();
 
         try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new Output.FakeOutput(), metricRegistry, prometheusPort)) {
+            // FIXME: code duplication when initializing without null
             EventContext eventContext = eventContextFactory.create();
             eventContextConsumer.accept(eventContext);
 
             long depth1 = 0L;
             final double records = 10;
-            for (int i = 0; i < records - 1; i++) {
+            for (int i = 1; i < records; i++) { // records - 1 loops
                 eventContext = eventContextFactory.create();
                 eventContextConsumer.accept(eventContext);
 
@@ -115,6 +115,8 @@ public class EventContextConsumerTest {
             Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "1"));
             Gauge<Long> gauge2 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "2"));
 
+            Assertions.assertEquals(depth1, 99L); // offsets are defined in the factory
+            Assertions.assertEquals(depth2, 99L);
             Assertions.assertEquals(depth1, gauge1.getValue());
             Assertions.assertEquals(depth2, gauge2.getValue());
         }
