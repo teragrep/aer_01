@@ -44,20 +44,18 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.config;
 
-import java.util.function.Consumer;
+import com.teragrep.aer_01.config.source.Sourceable;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
-    final class FakeOutput implements Output {
-        @Override
-        public void close() throws Exception {
-            // No functionality for a fake
-        }
+public class MetricsConfig {
 
-        @Override
-        public void accept(byte[] bytes) {
-            // No functionality for a fake
-        }
+    public final Sourceable configSource;
+    public final int prometheusPort;
+
+    public MetricsConfig(Sourceable configSource) {
+        this.configSource = configSource;
+        this.prometheusPort = Integer.parseInt(configSource.source("metrics.prometheusPort", "1234"));
     }
+
 }

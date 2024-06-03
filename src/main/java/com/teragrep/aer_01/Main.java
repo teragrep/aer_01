@@ -56,20 +56,20 @@ import com.azure.messaging.eventhubs.checkpointstore.blob.BlobCheckpointStore;
 import com.azure.storage.blob.BlobContainerAsyncClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
 import com.teragrep.aer_01.config.AzureConfig;
+import com.teragrep.aer_01.config.MetricsConfig;
 import com.teragrep.aer_01.config.source.EnvironmentSource;
 import com.teragrep.aer_01.config.source.PropertySource;
 import com.teragrep.aer_01.config.source.Sourceable;
-
-import java.io.IOException;
 
 // https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-java-get-started-send?tabs=passwordless%2Croles-azure-portal
 
 public final class Main {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         final Sourceable configSource = getConfigSource();
+        final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
 
-        try (final EventContextConsumer PARTITION_PROCESSOR = new EventContextConsumer(configSource)) {
+        try (final EventContextConsumer PARTITION_PROCESSOR = new EventContextConsumer(configSource, prometheusPort)) {
             AzureConfig azureConfig = new AzureConfig(configSource);
             final ErrorContextConsumer ERROR_HANDLER = new ErrorContextConsumer();
 
