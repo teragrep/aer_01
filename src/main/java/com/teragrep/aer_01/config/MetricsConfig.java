@@ -55,14 +55,7 @@ public class MetricsConfig {
 
     public MetricsConfig(Sourceable configSource) {
         this.configSource = configSource;
-        this.prometheusPort = getPrometheusPort();
+        this.prometheusPort = Integer.parseInt(configSource.source("metrics.prometheusPort", "1234"));
     }
 
-    /**
-     * @return relp.connection.timeout
-     */
-    private int getPrometheusPort() {
-        String prometheusPort = configSource.source("metrics.prometheusPort", "1234");
-        return Integer.parseInt(prometheusPort);
-    }
 }

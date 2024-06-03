@@ -69,6 +69,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -84,8 +85,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     private final Server jettyServer;
 
     // metrics
-    private double records;
-    private long allSize;
+    private final AtomicLong records = new AtomicLong();
+    private final AtomicLong allSize = new AtomicLong();
 
     EventContextConsumer(Sourceable configSource, int prometheusPort) {
         this(configSource, new MetricRegistry(), prometheusPort);
@@ -116,7 +117,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         jettyServer = new Server(prometheusPort);
         startMetrics();
 
-        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"), (Gauge<Double>) () -> (allSize / records) / records);
+        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"),
+                (Gauge<Double>) () -> (allSize.get() / records.doubleValue()) / records.doubleValue());
     }
 
     private String getRealHostName() {
@@ -158,8 +160,8 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         int messageLength = eventContext.getEventData().getBody().length;
         String partitionId = eventContext.getPartitionContext().getPartitionId();
 
-        records++;
-        allSize = allSize + messageLength;
+        records.incrementAndGet();
+        allSize.addAndGet(messageLength);
 
         metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", partitionId), () -> new Gauge<Long>() {
             @Override
