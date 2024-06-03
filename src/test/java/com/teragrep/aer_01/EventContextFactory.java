@@ -46,18 +46,8 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+import com.azure.messaging.eventhubs.models.EventContext;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
-    final class FakeOutput implements Output {
-        @Override
-        public void close() throws Exception {
-            // No functionality for a fake
-        }
-
-        @Override
-        public void accept(byte[] bytes) {
-            // No functionality for a fake
-        }
-    }
+public interface EventContextFactory {
+    EventContext create();
 }

@@ -46,18 +46,33 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+import com.azure.messaging.eventhubs.CheckpointStore;
+import com.azure.messaging.eventhubs.EventData;
+import com.azure.messaging.eventhubs.models.EventContext;
+import com.azure.messaging.eventhubs.models.LastEnqueuedEventProperties;
+import com.azure.messaging.eventhubs.models.PartitionContext;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
-    final class FakeOutput implements Output {
-        @Override
-        public void close() throws Exception {
-            // No functionality for a fake
+import java.time.Instant;
+
+final public class CheckpointlessEventContextFactory implements EventContextFactory {
+
+    private int created;
+    private Integer partitionId = 0;
+
+    @Override
+    public EventContext create() {
+        if (created % 5 == 0) {
+            partitionId++;
         }
 
-        @Override
-        public void accept(byte[] bytes) {
-            // No functionality for a fake
-        }
+        final PartitionContext partitionContext = new PartitionContext("namespace", "eventHubName",
+                "consumerGroup", partitionId.toString());
+        final EventData eventData = new EventDataFake();
+        final CheckpointStore checkpointStore = new CheckpointStoreFake();
+        final LastEnqueuedEventProperties lastEnqueuedEventProperties = new LastEnqueuedEventProperties(1L, 100L,
+                Instant.ofEpochSecond(0), Instant.ofEpochSecond(0));
+
+        created++;
+        return new EventContext(partitionContext, eventData, checkpointStore, lastEnqueuedEventProperties);
     }
 }

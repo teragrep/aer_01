@@ -78,29 +78,31 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     private final Output output;
     private final String realHostName;
     private final SyslogConfig syslogConfig;
-    private final MetricRegistry metricRegistry = new MetricRegistry();
+    private final MetricRegistry metricRegistry;
     private final JmxReporter jmxReporter;
     private final Slf4jReporter slf4jReporter;
     private final Server jettyServer;
 
     // metrics
-    private int records;
+    private double records;
     private long allSize;
 
     EventContextConsumer(Sourceable configSource, int prometheusPort) {
-        RelpConfig relpConfig = new RelpConfig(configSource);
+        this(configSource, new MetricRegistry(), prometheusPort);
+    }
 
-        this.output = new Output(
-                "defaultOutput",
-                relpConfig.destinationAddress,
-                relpConfig.destinationPort,
-                relpConfig.connectionTimeout,
-                relpConfig.readTimeout,
-                relpConfig.writeTimeout,
-                relpConfig.reconnectInterval,
-                metricRegistry
+    EventContextConsumer(Sourceable configSource, MetricRegistry metricRegistry, int prometheusPort) {
+        this(
+            configSource,
+            new DefaultOutput("defaultOutput", new RelpConfig(configSource), metricRegistry),
+            metricRegistry,
+            prometheusPort
         );
+    }
 
+    EventContextConsumer(Sourceable configSource, Output output, MetricRegistry metricRegistry, int prometheusPort) {
+        this.metricRegistry = metricRegistry;
+        this.output = output;
         this.realHostName = getRealHostName();
         this.syslogConfig = new SyslogConfig(configSource);
 
@@ -114,7 +116,7 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         jettyServer = new Server(prometheusPort);
         startMetrics();
 
-        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"), (Gauge<Long>) () -> (allSize / records) / records);
+        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"), (Gauge<Double>) () -> (allSize / records) / records);
     }
 
     private String getRealHostName() {
