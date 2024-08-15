@@ -120,7 +120,7 @@ final class DefaultOutput implements Output {
                     Thread.sleep(reconnectInterval);
                     retriedConnects.inc();
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Sleep interrupted while waiting for reconnectInterval <{}> on <[{}]>:<[{}]>", reconnectInterval, relpAddress, relpPort, e);
+                    LOGGER.warn("Sleep interrupted while waiting for reconnectInterval <[{}]> on <[{}]>:<[{}]>", reconnectInterval, relpAddress, relpPort, e);
                 }
             }
         }

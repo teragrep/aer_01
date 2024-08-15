@@ -46,8 +46,14 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+public final class OutputFake implements Output {
+    @Override
+    public void close() throws Exception {
+        // No functionality for a fake
+    }
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
-
+    @Override
+    public void accept(byte[] bytes) {
+        // No functionality for a fake
+    }
 }

@@ -68,7 +68,7 @@ public class EventContextConsumerTest {
         final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
         final MetricRegistry metricRegistry = new MetricRegistry();
 
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new Output.FakeOutput(), metricRegistry, prometheusPort)) {
+        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
             EventContext eventContext;
             final double records = 10;
             for (int i = 0; i < records; i++) {
@@ -95,7 +95,7 @@ public class EventContextConsumerTest {
         final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
         final MetricRegistry metricRegistry = new MetricRegistry();
 
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new Output.FakeOutput(), metricRegistry, prometheusPort)) {
+        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
             // FIXME: code duplication when initializing without null
             EventContext eventContext = eventContextFactory.create();
             eventContextConsumer.accept(eventContext);
@@ -129,7 +129,7 @@ public class EventContextConsumerTest {
         final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
         final MetricRegistry metricRegistry = new MetricRegistry();
 
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new Output.FakeOutput(), metricRegistry, prometheusPort)) {
+        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
             final double records = 10;
             long length = 0L;
             for (int i = 0; i < records; i++) {
