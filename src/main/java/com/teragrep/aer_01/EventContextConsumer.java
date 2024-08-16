@@ -46,7 +46,8 @@
 package com.teragrep.aer_01;
 
 import com.azure.messaging.eventhubs.models.EventContext;
-import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.*;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.aer_01.config.SyslogConfig;
 import com.teragrep.aer_01.config.source.Sourceable;
@@ -54,6 +55,13 @@ import com.teragrep.rlo_14.Facility;
 import com.teragrep.rlo_14.SDElement;
 import com.teragrep.rlo_14.Severity;
 import com.teragrep.rlo_14.SyslogMessage;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -61,29 +69,57 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 final class EventContextConsumer implements AutoCloseable, Consumer<EventContext> {
 
     private final Output output;
     private final String realHostName;
     private final SyslogConfig syslogConfig;
-    EventContextConsumer(Sourceable configSource) {
-        RelpConfig relpConfig = new RelpConfig(configSource);
+    private final MetricRegistry metricRegistry;
+    private final JmxReporter jmxReporter;
+    private final Slf4jReporter slf4jReporter;
+    private final Server jettyServer;
 
-        this.output = new Output(
-                "defaultOutput",
-                relpConfig.destinationAddress,
-                relpConfig.destinationPort,
-                relpConfig.connectionTimeout,
-                relpConfig.readTimeout,
-                relpConfig.writeTimeout,
-                relpConfig.reconnectInterval,
-                new MetricRegistry()
+    // metrics
+    private final AtomicLong records = new AtomicLong();
+    private final AtomicLong allSize = new AtomicLong();
+
+    EventContextConsumer(Sourceable configSource, int prometheusPort) {
+        this(configSource, new MetricRegistry(), prometheusPort);
+    }
+
+    EventContextConsumer(Sourceable configSource, MetricRegistry metricRegistry, int prometheusPort) {
+        this(
+            configSource,
+            new DefaultOutput("defaultOutput", new RelpConfig(configSource), metricRegistry),
+            metricRegistry,
+            prometheusPort
         );
+    }
 
+    EventContextConsumer(Sourceable configSource, Output output, MetricRegistry metricRegistry, int prometheusPort) {
+        this.metricRegistry = metricRegistry;
+        this.output = output;
         this.realHostName = getRealHostName();
         this.syslogConfig = new SyslogConfig(configSource);
+
+        this.jmxReporter = JmxReporter.forRegistry(metricRegistry).build();
+        this.slf4jReporter = Slf4jReporter
+                .forRegistry(metricRegistry)
+                .outputTo(LoggerFactory.getLogger(EventContextConsumer.class))
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build();
+        jettyServer = new Server(prometheusPort);
+        startMetrics();
+
+        metricRegistry.register(name(EventContextConsumer.class, "estimated-data-depth"),
+                (Gauge<Double>) () -> (allSize.get() / records.doubleValue()) / records.doubleValue());
     }
 
     private String getRealHostName() {
@@ -96,8 +132,50 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         return hostname;
     }
 
+    private void startMetrics() {
+        this.jmxReporter.start();
+        this.slf4jReporter.start(1, TimeUnit.MINUTES);
+
+        // prometheus-exporter
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
+
+        ServletContextHandler context = new ServletContextHandler();
+        context.setContextPath("/");
+        jettyServer.setHandler(context);
+
+        MetricsServlet metricsServlet = new MetricsServlet();
+        ServletHolder servletHolder = new ServletHolder(metricsServlet);
+        context.addServlet(servletHolder, "/metrics");
+
+        // Start the webserver.
+        try {
+            jettyServer.start();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void accept(EventContext eventContext) {
+        int messageLength = eventContext.getEventData().getBody().length;
+        String partitionId = eventContext.getPartitionContext().getPartitionId();
+
+        records.incrementAndGet();
+        allSize.addAndGet(messageLength);
+
+        metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", partitionId), () -> new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return Instant.now().getEpochSecond() - eventContext.getEventData().getEnqueuedTime().getEpochSecond();
+            }
+        });
+        metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", partitionId), () -> new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
+            }
+        });
 
         String eventUuid = eventContext.getEventData().getMessageId();
 
@@ -136,12 +214,9 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
         // TODO metrics about these vs last retrieved, these are tracked per partition!:
         eventContext.getLastEnqueuedEventProperties().getEnqueuedTime();
         eventContext.getLastEnqueuedEventProperties().getSequenceNumber();
-        eventContext.getLastEnqueuedEventProperties().getOffset();
         eventContext.getLastEnqueuedEventProperties().getRetrievalTime(); // null if not retrieved
 
         // TODO compare these to above
-        eventContext.getEventData().getOffset();
-        eventContext.getEventData().getEnqueuedTime();
         eventContext.getEventData().getPartitionKey();
         eventContext.getEventData().getProperties();
         */
@@ -166,7 +241,10 @@ final class EventContextConsumer implements AutoCloseable, Consumer<EventContext
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         output.close();
+        slf4jReporter.close();
+        jmxReporter.close();
+        jettyServer.stop();
     }
 }

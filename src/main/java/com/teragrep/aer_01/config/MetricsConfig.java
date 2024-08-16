@@ -44,10 +44,18 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.config;
 
-import java.util.function.Consumer;
+import com.teragrep.aer_01.config.source.Sourceable;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
+public class MetricsConfig {
+
+    public final Sourceable configSource;
+    public final int prometheusPort;
+
+    public MetricsConfig(Sourceable configSource) {
+        this.configSource = configSource;
+        this.prometheusPort = Integer.parseInt(configSource.source("metrics.prometheusPort", "1234"));
+    }
 
 }

@@ -46,8 +46,8 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+import com.azure.messaging.eventhubs.models.EventContext;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
-
+public interface EventContextFactory {
+    EventContext create();
 }

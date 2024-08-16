@@ -46,8 +46,34 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+import com.azure.messaging.eventhubs.EventData;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 
+public class EventDataFake extends EventData {
+    @Override
+    public byte[] getBody() {
+        return "foo".getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public Long getOffset() {
+        return 1L;
+    }
+
+    @Override
+    public String getPartitionKey() {
+        return "key";
+    }
+
+    @Override
+    public Instant getEnqueuedTime() {
+        return Instant.ofEpochSecond(0);
+    }
+
+    @Override
+    public Long getSequenceNumber() {
+        return 1L;
+    }
 }

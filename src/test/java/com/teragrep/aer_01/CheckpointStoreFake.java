@@ -46,8 +46,33 @@
 
 package com.teragrep.aer_01;
 
-import java.util.function.Consumer;
+import com.azure.messaging.eventhubs.CheckpointStore;
+import com.azure.messaging.eventhubs.models.Checkpoint;
+import com.azure.messaging.eventhubs.models.PartitionOwnership;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-public interface Output extends Consumer<byte[]>, AutoCloseable {
+import java.util.List;
 
+public class CheckpointStoreFake implements CheckpointStore {
+
+    @Override
+    public Flux<PartitionOwnership> listOwnership(String s, String s1, String s2) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
+    }
+
+    @Override
+    public Flux<PartitionOwnership> claimOwnership(List<PartitionOwnership> list) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
+    }
+
+    @Override
+    public Flux<Checkpoint> listCheckpoints(String s, String s1, String s2) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
+    }
+
+    @Override
+    public Mono<Void> updateCheckpoint(Checkpoint checkpoint) {
+        return Mono.empty();
+    }
 }
