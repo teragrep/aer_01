@@ -44,36 +44,18 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.fakes;
 
-import com.azure.messaging.eventhubs.EventData;
+import com.teragrep.aer_01.Output;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-
-public class EventDataFake extends EventData {
+public final class OutputFake implements Output {
     @Override
-    public byte[] getBody() {
-        return "foo".getBytes(StandardCharsets.UTF_8);
+    public void close() throws Exception {
+        // No functionality for a fake
     }
 
     @Override
-    public Long getOffset() {
-        return 1L;
-    }
-
-    @Override
-    public String getPartitionKey() {
-        return "key";
-    }
-
-    @Override
-    public Instant getEnqueuedTime() {
-        return Instant.ofEpochSecond(0);
-    }
-
-    @Override
-    public Long getSequenceNumber() {
-        return 1L;
+    public void accept(byte[] bytes) {
+        // No functionality for a fake
     }
 }

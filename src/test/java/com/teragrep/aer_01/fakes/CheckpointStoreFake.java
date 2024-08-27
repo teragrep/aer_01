@@ -44,16 +44,35 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.fakes;
 
-public final class OutputFake implements Output {
+import com.azure.messaging.eventhubs.CheckpointStore;
+import com.azure.messaging.eventhubs.models.Checkpoint;
+import com.azure.messaging.eventhubs.models.PartitionOwnership;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+public class CheckpointStoreFake implements CheckpointStore {
+
     @Override
-    public void close() throws Exception {
-        // No functionality for a fake
+    public Flux<PartitionOwnership> listOwnership(String s, String s1, String s2) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
     }
 
     @Override
-    public void accept(byte[] bytes) {
-        // No functionality for a fake
+    public Flux<PartitionOwnership> claimOwnership(List<PartitionOwnership> list) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
+    }
+
+    @Override
+    public Flux<Checkpoint> listCheckpoints(String s, String s1, String s2) {
+        throw new UnsupportedOperationException("CheckpointStoreFake does not implement this function.");
+    }
+
+    @Override
+    public Mono<Void> updateCheckpoint(Checkpoint checkpoint) {
+        return Mono.empty();
     }
 }
