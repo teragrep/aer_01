@@ -48,15 +48,21 @@ package com.teragrep.aer_01;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SlidingWindowReservoir;
+import com.codahale.metrics.Timer;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.aer_01.config.source.PropertySource;
+import com.teragrep.aer_01.fakes.ConnectionlessRelpConnectionFake;
 import com.teragrep.aer_01.fakes.RelpConnectionFake;
+import com.teragrep.aer_01.fakes.ThrowingRelpConnectionFake;
 import com.teragrep.rlo_14.Facility;
 import com.teragrep.rlo_14.Severity;
 import com.teragrep.rlo_14.SyslogMessage;
+import com.teragrep.rlp_01.RelpConnection;
 import org.junit.jupiter.api.*;
 
 import java.nio.charset.StandardCharsets;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DefaultOutputTest {
@@ -95,5 +101,50 @@ public class DefaultOutputTest {
 
         Assertions.assertEquals(measurementLimit, sendReservoir.size()); // should have measurementLimit amount of records saved
         Assertions.assertEquals(1, connectReservoir.size()); // only connected once
+    }
+
+    @Test
+    public void testConnectionLatencyMetricIsCapped() { // Should take information on how long it took to successfully connect
+        System.setProperty("relp.connection.retry.interval", "1");
+
+        final int measurementLimit = 100;
+        final int reconnections = measurementLimit + 10;
+
+        // set up DefaultOutput
+        MetricRegistry metricRegistry = new MetricRegistry();
+        SlidingWindowReservoir sendReservoir = new SlidingWindowReservoir(measurementLimit);
+        SlidingWindowReservoir connectReservoir = new SlidingWindowReservoir(measurementLimit);
+        RelpConnection relpConnection = new ConnectionlessRelpConnectionFake(reconnections); // use a fake that forces reconnects
+        output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()), metricRegistry,
+                relpConnection, sendReservoir, connectReservoir);
+
+        output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+
+        Assertions.assertEquals(1, sendReservoir.size()); // only sent 1 message
+        Assertions.assertEquals(measurementLimit, connectReservoir.size()); // should have measurementLimit amount of records saved
+
+        System.clearProperty("relp.connection.retry.interval");
+    }
+
+    @Test
+    public void testConnectionLatencyMetricWithException() { // should not update value if an exception was thrown from server
+        System.setProperty("relp.connection.retry.interval", "1");
+
+        final int reconnections = 10;
+
+        // set up DefaultOutput
+        MetricRegistry metricRegistry = new MetricRegistry();
+        RelpConnection relpConnection = new ThrowingRelpConnectionFake(reconnections); // use a fake that throws exceptions when connecting
+        output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()), metricRegistry, relpConnection);
+
+        output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+
+        Timer sendTimer = metricRegistry.timer(name(DefaultOutput.class, "<[defaultOutput]>", "sendLatency"));
+        Timer connectionTimer = metricRegistry.timer(name(DefaultOutput.class, "<[defaultOutput]>", "connectLatency"));
+
+        Assertions.assertEquals(1, sendTimer.getCount()); // only sent 1 message
+        Assertions.assertEquals(1, connectionTimer.getCount()); // only 1 connection attempt without throwing recorded
+
+        System.clearProperty("relp.connection.retry.interval");
     }
 }

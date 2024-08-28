@@ -78,7 +78,11 @@ final class DefaultOutput implements Output {
 
 
     DefaultOutput(String name, RelpConfig relpConfig, MetricRegistry metricRegistry) {
-        this(name, relpConfig, metricRegistry, new RelpConnection(), new SlidingWindowReservoir(10000), new SlidingWindowReservoir(10000));
+        this(name, relpConfig, metricRegistry, new RelpConnection());
+    }
+
+    DefaultOutput(String name, RelpConfig relpConfig, MetricRegistry metricRegistry, RelpConnection relpConnection) {
+        this(name, relpConfig, metricRegistry, relpConnection, new SlidingWindowReservoir(10000), new SlidingWindowReservoir(10000));
     }
 
     DefaultOutput(String name,
@@ -110,8 +114,10 @@ final class DefaultOutput implements Output {
     private void connect() {
         boolean connected = false;
         while (!connected) {
-            try (final Timer.Context context = connectLatency.time()) {
+            final Timer.Context context = connectLatency.time(); // reset the time (new context)
+            try {
                 connected = this.relpConnection.connect(relpAddress, relpPort);
+                context.close(); // manually close here, so the timer is only updated if no exceptions were thrown
                 connects.inc();
             } catch (IOException | TimeoutException e) {
                 LOGGER.error("Exception while connecting to <[{}]>:<[{}]>", relpAddress, relpPort, e);
