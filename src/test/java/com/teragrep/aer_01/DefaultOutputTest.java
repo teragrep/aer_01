@@ -67,36 +67,26 @@ import static com.codahale.metrics.MetricRegistry.name;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DefaultOutputTest {
 
-    private SyslogMessage syslogMessage;
-    private DefaultOutput output;
-
-    @BeforeAll
-    public void setEnv() {
-        syslogMessage = new SyslogMessage()
+    @Test
+    public void testSendLatencyMetricIsCapped() { // Should only keep information on the last 10.000 messages
+        SyslogMessage syslogMessage = new SyslogMessage()
                 .withSeverity(Severity.INFORMATIONAL)
                 .withFacility(Facility.LOCAL0)
                 .withMsgId("123")
                 .withMsg("test");
-    }
 
-    @AfterEach
-    public void tearDown() {
-        output.close();
-    }
-
-    @Test
-    public void testSendLatencyMetricIsCapped() { // Should only keep information on the last 10.000 messages
         final int measurementLimit = 10000;
 
         // set up DefaultOutput
         MetricRegistry metricRegistry = new MetricRegistry();
         SlidingWindowReservoir sendReservoir = new SlidingWindowReservoir(measurementLimit);
         SlidingWindowReservoir connectReservoir = new SlidingWindowReservoir(measurementLimit);
-        output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()), metricRegistry,
-                new RelpConnectionFake(), sendReservoir, connectReservoir);
+        try (DefaultOutput output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()),
+                metricRegistry, new RelpConnectionFake(), sendReservoir, connectReservoir)) {
 
-        for (int i = 0; i < measurementLimit + 100; i++) { // send more messages than the limit is
-            output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+            for (int i = 0; i < measurementLimit + 100; i++) { // send more messages than the limit is
+                output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+            }
         }
 
         Assertions.assertEquals(measurementLimit, sendReservoir.size()); // should have measurementLimit amount of records saved
@@ -107,6 +97,12 @@ public class DefaultOutputTest {
     public void testConnectionLatencyMetricIsCapped() { // Should take information on how long it took to successfully connect
         System.setProperty("relp.connection.retry.interval", "1");
 
+        SyslogMessage syslogMessage = new SyslogMessage()
+                .withSeverity(Severity.INFORMATIONAL)
+                .withFacility(Facility.LOCAL0)
+                .withMsgId("123")
+                .withMsg("test");
+
         final int measurementLimit = 100;
         final int reconnections = measurementLimit + 10;
 
@@ -115,10 +111,10 @@ public class DefaultOutputTest {
         SlidingWindowReservoir sendReservoir = new SlidingWindowReservoir(measurementLimit);
         SlidingWindowReservoir connectReservoir = new SlidingWindowReservoir(measurementLimit);
         RelpConnection relpConnection = new ConnectionlessRelpConnectionFake(reconnections); // use a fake that forces reconnects
-        output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()), metricRegistry,
-                relpConnection, sendReservoir, connectReservoir);
-
-        output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+        try (DefaultOutput output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()),
+                metricRegistry, relpConnection, sendReservoir, connectReservoir)) {
+            output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+        }
 
         Assertions.assertEquals(1, sendReservoir.size()); // only sent 1 message
         Assertions.assertEquals(measurementLimit, connectReservoir.size()); // should have measurementLimit amount of records saved
@@ -130,14 +126,21 @@ public class DefaultOutputTest {
     public void testConnectionLatencyMetricWithException() { // should not update value if an exception was thrown from server
         System.setProperty("relp.connection.retry.interval", "1");
 
+        SyslogMessage syslogMessage = new SyslogMessage()
+                .withSeverity(Severity.INFORMATIONAL)
+                .withFacility(Facility.LOCAL0)
+                .withMsgId("123")
+                .withMsg("test");
+
         final int reconnections = 10;
 
         // set up DefaultOutput
         MetricRegistry metricRegistry = new MetricRegistry();
         RelpConnection relpConnection = new ThrowingRelpConnectionFake(reconnections); // use a fake that throws exceptions when connecting
-        output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()), metricRegistry, relpConnection);
-
-        output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+        try (DefaultOutput output = new DefaultOutput("defaultOutput", new RelpConfig(new PropertySource()),
+                metricRegistry, relpConnection)) {
+            output.accept(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
+        }
 
         Timer sendTimer = metricRegistry.timer(name(DefaultOutput.class, "<[defaultOutput]>", "sendLatency"));
         Timer connectionTimer = metricRegistry.timer(name(DefaultOutput.class, "<[defaultOutput]>", "connectLatency"));

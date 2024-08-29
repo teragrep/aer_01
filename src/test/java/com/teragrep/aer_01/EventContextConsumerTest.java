@@ -66,34 +66,22 @@ import static com.codahale.metrics.MetricRegistry.name;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EventContextConsumerTest {
 
-    private EventContextFactory eventContextFactory;
-    private MetricRegistry metricRegistry;
-
-    private EventContextConsumer eventContextConsumer;
-
-    @org.junit.jupiter.api.BeforeEach
-    public void setUp() {
-        Sourceable configSource = new PropertySource();
-        int prometheusPort = new MetricsConfig(configSource).prometheusPort;
-
-        eventContextFactory = new CheckpointlessEventContextFactory();
-        metricRegistry = new MetricRegistry();
-
-        eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
-    }
-
-    @org.junit.jupiter.api.AfterEach
-    public void tearDown() throws Exception {
-        eventContextConsumer.close();
-    }
+    private final Sourceable configSource = new PropertySource();
+    private final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
 
     @Test
     public void testLatencyMetric() {
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
+
         final double records = 10;
         for (int i = 0; i < records; i++) {
             EventContext eventContext = eventContextFactory.create();
             eventContextConsumer.accept(eventContext);
         }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
 
         long latency = Instant.now().getEpochSecond();
 
@@ -108,11 +96,16 @@ public class EventContextConsumerTest {
 
     @Test
     public void testDepthBytesMetric() {
-        EventContext eventContext = eventContextFactory.create();
-        eventContextConsumer.accept(eventContext);
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
 
         long depth1 = 0L;
         final double records = 10;
+        EventContext eventContext = eventContextFactory.create();
+
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
+        eventContextConsumer.accept(eventContext);
+
         for (int i = 1; i < records; i++) { // records - 1 loops
             if (i == 5) { // 5 records per partition
                 depth1 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
@@ -121,6 +114,8 @@ public class EventContextConsumerTest {
             eventContext = eventContextFactory.create();
             eventContextConsumer.accept(eventContext);
         }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
 
         long depth2 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
         Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "1"));
@@ -134,6 +129,10 @@ public class EventContextConsumerTest {
 
     @Test
     public void testEstimatedDataDepthMetric() {
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
+
         final double records = 10;
         long length = 0L;
         for (int i = 0; i < records; i++) {
@@ -141,6 +140,8 @@ public class EventContextConsumerTest {
             length = length + eventContext.getEventData().getBody().length;
             eventContextConsumer.accept(eventContext);
         }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
 
         Gauge<Long> gauge = metricRegistry.gauge(MetricRegistry.name(EventContextConsumer.class, "estimated-data-depth"));
         Double estimatedDepth = (length / records) / records;
