@@ -49,6 +49,8 @@ package com.teragrep.aer_01.fakes;
 import com.teragrep.rlp_01.RelpBatch;
 import com.teragrep.rlp_01.RelpConnection;
 
+import java.io.IOException;
+
 public class RelpConnectionFake extends RelpConnection {
 
     @Override
@@ -67,7 +69,7 @@ public class RelpConnectionFake extends RelpConnection {
     }
 
     @Override
-    public boolean connect(String hostname, int port) {
+    public boolean connect(String hostname, int port) throws IOException {
         return true;
     }
 

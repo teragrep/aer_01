@@ -46,13 +46,10 @@
 
 package com.teragrep.aer_01.fakes;
 
-import com.teragrep.rlp_01.RelpBatch;
-import com.teragrep.rlp_01.RelpConnection;
-
 /**
  * Fake that reconnects until the amount of reconnects reach the given limit.
  */
-public class ConnectionlessRelpConnectionFake extends RelpConnection {
+public class ConnectionlessRelpConnectionFake extends RelpConnectionFake {
 
     private final int limit;
     private int timesConnected = 0;
@@ -63,43 +60,8 @@ public class ConnectionlessRelpConnectionFake extends RelpConnection {
     }
 
     @Override
-    public void setReadTimeout(int readTimeout) {
-        // no-op in fake
-    }
-
-    @Override
-    public void setWriteTimeout(int writeTimeout) {
-        // no-op in fake
-    }
-
-    @Override
-    public void setConnectionTimeout(int timeout) {
-        // no-op in fake
-    }
-
-    @Override
     public boolean connect(String hostname, int port) {
         timesConnected++;
         return timesConnected >= limit;
-    }
-
-    @Override
-    public void tearDown() {
-        // no-op in fake
-    }
-
-    @Override
-    public boolean disconnect() {
-        return true;
-    }
-
-    @Override
-    public void commit(RelpBatch relpBatch) {
-        // remove all the requests from relpBatch in the fake
-        // so that the batch will return true in verifyTransactionAll()
-        while (relpBatch.getWorkQueueLength() > 0) {
-            long reqId = relpBatch.popWorkQueue();
-            relpBatch.removeRequest(reqId);
-        }
     }
 }

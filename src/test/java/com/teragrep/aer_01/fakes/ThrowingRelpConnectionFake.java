@@ -46,15 +46,12 @@
 
 package com.teragrep.aer_01.fakes;
 
-import com.teragrep.rlp_01.RelpBatch;
-import com.teragrep.rlp_01.RelpConnection;
-
 import java.io.IOException;
 
 /**
  * Fake that throws an exception when connecting until the amount of connect attempts reach the given limit.
  */
-public class ThrowingRelpConnectionFake extends RelpConnection {
+public class ThrowingRelpConnectionFake extends RelpConnectionFake {
 
     private final int limit;
     private int timesConnected = 0;
@@ -65,46 +62,11 @@ public class ThrowingRelpConnectionFake extends RelpConnection {
     }
 
     @Override
-    public void setReadTimeout(int readTimeout) {
-        // no-op in fake
-    }
-
-    @Override
-    public void setWriteTimeout(int writeTimeout) {
-        // no-op in fake
-    }
-
-    @Override
-    public void setConnectionTimeout(int timeout) {
-        // no-op in fake
-    }
-
-    @Override
     public boolean connect(String hostname, int port) throws IOException, IllegalStateException {
         timesConnected++;
         if (timesConnected < limit) {
             throw new IOException("Fake exception");
         }
-        return true;
-    }
-
-    @Override
-    public void tearDown() {
-        // no-op in fake
-    }
-
-    @Override
-    public boolean disconnect() {
-        return true;
-    }
-
-    @Override
-    public void commit(RelpBatch relpBatch) {
-        // remove all the requests from relpBatch in the fake
-        // so that the batch will return true in verifyTransactionAll()
-        while (relpBatch.getWorkQueueLength() > 0) {
-            long reqId = relpBatch.popWorkQueue();
-            relpBatch.removeRequest(reqId);
-        }
+        return super.connect(hostname, port);
     }
 }
