@@ -117,6 +117,11 @@ final class DefaultOutput implements Output {
             final Timer.Context context = connectLatency.time(); // reset the time (new context)
             try {
                 connected = this.relpConnection.connect(relpAddress, relpPort);
+                /*
+                Not closing the context in case of an exception thrown in .connect() will leave the timer.context
+                for garbage collector to remove. This will happen even if the context is closed because of how
+                the Timer is implemented.
+                 */
                 context.close(); // manually close here, so the timer is only updated if no exceptions were thrown
                 connects.inc();
             } catch (IOException | TimeoutException e) {
