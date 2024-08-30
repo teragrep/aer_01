@@ -52,96 +52,100 @@ import com.codahale.metrics.MetricRegistry;
 import com.teragrep.aer_01.config.MetricsConfig;
 import com.teragrep.aer_01.config.source.PropertySource;
 import com.teragrep.aer_01.config.source.Sourceable;
+import com.teragrep.aer_01.fakes.CheckpointlessEventContextFactory;
+import com.teragrep.aer_01.fakes.EventContextFactory;
+import com.teragrep.aer_01.fakes.OutputFake;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.time.Instant;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EventContextConsumerTest {
 
-    @Test
-    public void testLatencyMetric() throws Exception {
-        final EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
-        final Sourceable configSource = new PropertySource();
-        final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
-        final MetricRegistry metricRegistry = new MetricRegistry();
-
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
-            EventContext eventContext;
-            final double records = 10;
-            for (int i = 0; i < records; i++) {
-                eventContext = eventContextFactory.create();
-                eventContextConsumer.accept(eventContext);
-            }
-
-            long latency = Instant.now().getEpochSecond();
-
-            // 5 records for each partition
-            Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", "1"));
-            Gauge<Long> gauge2 = metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", "2"));
-
-            // hard to test the exact correct latency
-            Assertions.assertTrue(gauge1.getValue() >= latency);
-            Assertions.assertTrue(gauge2.getValue() >= latency);
-        }
-    }
+    private final Sourceable configSource = new PropertySource();
+    private final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
 
     @Test
-    public void testDepthBytesMetric() throws Exception {
-        final EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
-        final Sourceable configSource = new PropertySource();
-        final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
-        final MetricRegistry metricRegistry = new MetricRegistry();
+    public void testLatencyMetric() {
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
 
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
-            // FIXME: code duplication when initializing without null
+        final double records = 10;
+        for (int i = 0; i < records; i++) {
             EventContext eventContext = eventContextFactory.create();
             eventContextConsumer.accept(eventContext);
-
-            long depth1 = 0L;
-            final double records = 10;
-            for (int i = 1; i < records; i++) { // records - 1 loops
-                eventContext = eventContextFactory.create();
-                eventContextConsumer.accept(eventContext);
-
-                if (i == 4) {
-                    depth1 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
-                }
-            }
-
-            long depth2 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
-            Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "1"));
-            Gauge<Long> gauge2 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "2"));
-
-            Assertions.assertEquals(depth1, 99L); // offsets are defined in the factory
-            Assertions.assertEquals(depth2, 99L);
-            Assertions.assertEquals(depth1, gauge1.getValue());
-            Assertions.assertEquals(depth2, gauge2.getValue());
         }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
+
+        long latency = Instant.now().getEpochSecond();
+
+        // 5 records for each partition
+        Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", "1"));
+        Gauge<Long> gauge2 = metricRegistry.gauge(name(EventContextConsumer.class, "latency-seconds", "2"));
+
+        // hard to test the exact correct latency
+        Assertions.assertTrue(gauge1.getValue() >= latency);
+        Assertions.assertTrue(gauge2.getValue() >= latency);
     }
 
     @Test
-    public void testEstimatedDataDepthMetric() throws Exception {
-        final EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
-        final Sourceable configSource = new PropertySource();
-        final int prometheusPort = new MetricsConfig(configSource).prometheusPort;
-        final MetricRegistry metricRegistry = new MetricRegistry();
+    public void testDepthBytesMetric() {
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
 
-        try (EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort)) {
-            final double records = 10;
-            long length = 0L;
-            for (int i = 0; i < records; i++) {
-                EventContext eventContext = eventContextFactory.create();
-                length = length + eventContext.getEventData().getBody().length;
-                eventContextConsumer.accept(eventContext);
+        long depth1 = 0L;
+        final double records = 10;
+        EventContext eventContext = eventContextFactory.create();
+
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
+        eventContextConsumer.accept(eventContext);
+
+        for (int i = 1; i < records; i++) { // records - 1 loops
+            if (i == 5) { // 5 records per partition
+                depth1 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
             }
 
-            Gauge<Long> gauge = metricRegistry.gauge(MetricRegistry.name(EventContextConsumer.class, "estimated-data-depth"));
-            Double estimatedDepth = (length / records) / records;
-
-            Assertions.assertEquals(estimatedDepth, gauge.getValue());
+            eventContext = eventContextFactory.create();
+            eventContextConsumer.accept(eventContext);
         }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
+
+        long depth2 = eventContext.getLastEnqueuedEventProperties().getOffset() - eventContext.getEventData().getOffset();
+        Gauge<Long> gauge1 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "1"));
+        Gauge<Long> gauge2 = metricRegistry.gauge(name(EventContextConsumer.class, "depth-bytes", "2"));
+
+        Assertions.assertEquals(depth1, 99L); // offsets are defined in the factory
+        Assertions.assertEquals(depth2, 99L);
+        Assertions.assertEquals(depth1, gauge1.getValue());
+        Assertions.assertEquals(depth2, gauge2.getValue());
+    }
+
+    @Test
+    public void testEstimatedDataDepthMetric() {
+        EventContextFactory eventContextFactory = new CheckpointlessEventContextFactory();
+        MetricRegistry metricRegistry = new MetricRegistry();
+        EventContextConsumer eventContextConsumer = new EventContextConsumer(configSource, new OutputFake(), metricRegistry, prometheusPort);
+
+        final double records = 10;
+        long length = 0L;
+        for (int i = 0; i < records; i++) {
+            EventContext eventContext = eventContextFactory.create();
+            length = length + eventContext.getEventData().getBody().length;
+            eventContextConsumer.accept(eventContext);
+        }
+
+        Assertions.assertDoesNotThrow(eventContextConsumer::close);
+
+        Gauge<Long> gauge = metricRegistry.gauge(MetricRegistry.name(EventContextConsumer.class, "estimated-data-depth"));
+        Double estimatedDepth = (length / records) / records;
+
+        Assertions.assertEquals(estimatedDepth, gauge.getValue());
     }
 }

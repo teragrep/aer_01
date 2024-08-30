@@ -44,10 +44,36 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.fakes;
 
-import com.azure.messaging.eventhubs.models.EventContext;
+import com.azure.messaging.eventhubs.EventData;
 
-public interface EventContextFactory {
-    EventContext create();
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+
+public class EventDataFake extends EventData {
+    @Override
+    public byte[] getBody() {
+        return "foo".getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public Long getOffset() {
+        return 1L;
+    }
+
+    @Override
+    public String getPartitionKey() {
+        return "key";
+    }
+
+    @Override
+    public Instant getEnqueuedTime() {
+        return Instant.ofEpochSecond(0);
+    }
+
+    @Override
+    public Long getSequenceNumber() {
+        return 1L;
+    }
 }

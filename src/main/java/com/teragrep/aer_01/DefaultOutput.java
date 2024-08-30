@@ -45,9 +45,7 @@
  */
 package com.teragrep.aer_01;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import com.codahale.metrics.*;
 import com.teragrep.aer_01.config.RelpConfig;
 import com.teragrep.rlp_01.RelpBatch;
 import com.teragrep.rlp_01.RelpConnection;
@@ -79,15 +77,25 @@ final class DefaultOutput implements Output {
     private final Timer connectLatency;
 
 
-    DefaultOutput(
-            String name,
-            RelpConfig relpConfig,
-            MetricRegistry metricRegistry) {
+    DefaultOutput(String name, RelpConfig relpConfig, MetricRegistry metricRegistry) {
+        this(name, relpConfig, metricRegistry, new RelpConnection());
+    }
+
+    DefaultOutput(String name, RelpConfig relpConfig, MetricRegistry metricRegistry, RelpConnection relpConnection) {
+        this(name, relpConfig, metricRegistry, relpConnection, new SlidingWindowReservoir(10000), new SlidingWindowReservoir(10000));
+    }
+
+    DefaultOutput(String name,
+                  RelpConfig relpConfig,
+                  MetricRegistry metricRegistry,
+                  RelpConnection relpConnection,
+                  Reservoir sendReservoir,
+                  Reservoir connectReservoir) {
         this.relpAddress = relpConfig.destinationAddress;
         this.relpPort = relpConfig.destinationPort;
         this.reconnectInterval = relpConfig.reconnectInterval;
 
-        this.relpConnection = new RelpConnection();
+        this.relpConnection = relpConnection;
         this.relpConnection.setConnectionTimeout(relpConfig.connectionTimeout);
         this.relpConnection.setReadTimeout(relpConfig.readTimeout);
         this.relpConnection.setWriteTimeout(relpConfig.writeTimeout);
@@ -97,8 +105,8 @@ final class DefaultOutput implements Output {
         this.resends = metricRegistry.counter(name(DefaultOutput.class, "<[" + name + "]>", "resends"));
         this.connects = metricRegistry.counter(name(DefaultOutput.class, "<[" + name + "]>", "connects"));
         this.retriedConnects = metricRegistry.counter(name(DefaultOutput.class, "<[" + name + "]>", "retriedConnects"));
-        this.sendLatency = metricRegistry.timer(name(DefaultOutput.class, "<[" + name + "]>", "sendLatency"));
-        this.connectLatency = metricRegistry.timer(name(DefaultOutput.class, "<[" + name + "]>", "connectLatency"));
+        this.sendLatency = metricRegistry.timer(name(DefaultOutput.class, "<[" + name + "]>", "sendLatency"), () -> new Timer(sendReservoir));
+        this.connectLatency = metricRegistry.timer(name(DefaultOutput.class, "<[" + name + "]>", "connectLatency"), () -> new Timer(connectReservoir));
 
         connect();
     }
@@ -106,8 +114,15 @@ final class DefaultOutput implements Output {
     private void connect() {
         boolean connected = false;
         while (!connected) {
-            try (final Timer.Context context = connectLatency.time()) {
+            final Timer.Context context = connectLatency.time(); // reset the time (new context)
+            try {
                 connected = this.relpConnection.connect(relpAddress, relpPort);
+                /*
+                Not closing the context in case of an exception thrown in .connect() will leave the timer.context
+                for garbage collector to remove. This will happen even if the context is closed because of how
+                the Timer is implemented.
+                 */
+                context.close(); // manually close here, so the timer is only updated if no exceptions were thrown
                 connects.inc();
             } catch (IOException | TimeoutException e) {
                 LOGGER.error("Exception while connecting to <[{}]>:<[{}]>", relpAddress, relpPort, e);

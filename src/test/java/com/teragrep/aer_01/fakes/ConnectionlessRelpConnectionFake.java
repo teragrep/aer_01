@@ -44,36 +44,24 @@
  * a licensee so wish it.
  */
 
-package com.teragrep.aer_01;
+package com.teragrep.aer_01.fakes;
 
-import com.azure.messaging.eventhubs.EventData;
+/**
+ * Fake that reconnects until the amount of reconnects reach the given limit.
+ */
+public class ConnectionlessRelpConnectionFake extends RelpConnectionFake {
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
+    private final int limit;
+    private int timesConnected = 0;
 
-public class EventDataFake extends EventData {
-    @Override
-    public byte[] getBody() {
-        return "foo".getBytes(StandardCharsets.UTF_8);
+    public ConnectionlessRelpConnectionFake(int limit) {
+        super();
+        this.limit = limit;
     }
 
     @Override
-    public Long getOffset() {
-        return 1L;
-    }
-
-    @Override
-    public String getPartitionKey() {
-        return "key";
-    }
-
-    @Override
-    public Instant getEnqueuedTime() {
-        return Instant.ofEpochSecond(0);
-    }
-
-    @Override
-    public Long getSequenceNumber() {
-        return 1L;
+    public boolean connect(String hostname, int port) {
+        timesConnected++;
+        return timesConnected >= limit;
     }
 }
