@@ -53,12 +53,13 @@ public final class AzureConfig {
     private final String eventHubName;
     private final String blobStorageEndpoint;
     private final String blobStorageContainerName;
+    private final String userManagedIdentityClientId;
 
     public AzureConfig(final Sourceable configSource) {
         this(
                 configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net"),
                 configSource.source("azure.eventhub", "<EVENT HUB NAME>"),
-                configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net"), configSource.source("azure.blobstorage.container", "<CONTAINER NAME>")
+                configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net"), configSource.source("azure.blobstorage.container", "<CONTAINER NAME>"), configSource.source("azure.identity.usermanaged", "<USER MANAGED IDENTITY ID>")
         );
     }
 
@@ -66,12 +67,14 @@ public final class AzureConfig {
             final String namespaceName,
             final String eventHubName,
             final String blobStorageEndpoint,
-            final String blobStorageContainerName
+            final String blobStorageContainerName,
+            final String userManagedIdentityClientId
     ) {
         this.namespaceName = namespaceName;
         this.eventHubName = eventHubName;
         this.blobStorageEndpoint = blobStorageEndpoint;
         this.blobStorageContainerName = blobStorageContainerName;
+        this.userManagedIdentityClientId = userManagedIdentityClientId;
     }
 
     public String namespaceName() {
@@ -88,5 +91,9 @@ public final class AzureConfig {
 
     public String blobStorageContainerName() {
         return blobStorageContainerName;
+    }
+
+    public String userManagedIdentityClientId() {
+        return userManagedIdentityClientId;
     }
 }
