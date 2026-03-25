@@ -45,9 +45,8 @@
  */
 package com.teragrep.aer_01;
 
-import com.azure.identity.AzureAuthorityHosts;
-import com.azure.identity.DefaultAzureCredential;
-import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.core.credential.TokenCredential;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.messaging.eventhubs.EventHubClientBuilder;
 import com.azure.messaging.eventhubs.EventProcessorClient;
 import com.azure.messaging.eventhubs.EventProcessorClientBuilder;
@@ -180,9 +179,9 @@ public final class Main {
             final AzureConfig azureConfig = new AzureConfig(configSource);
             final ErrorContextConsumer ERROR_HANDLER = new ErrorContextConsumer();
 
-            // create a token using the default Azure credential
-            final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
-                    .authorityHost(AzureAuthorityHosts.AZURE_PUBLIC_CLOUD)
+            // create credentials using the ManagedIdentityCredentialBuilder
+            final TokenCredential credential = new ManagedIdentityCredentialBuilder()
+                    .clientId(azureConfig.userManagedIdentityClientId())
                     .build();
 
             // Create a blob container client that you use later to build an event processor client to receive and process events
