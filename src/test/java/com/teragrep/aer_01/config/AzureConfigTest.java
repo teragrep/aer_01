@@ -45,6 +45,7 @@
  */
 package com.teragrep.aer_01.config;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -129,5 +130,11 @@ class AzureConfigTest {
         final String expectedReturnValue = "identityId";
 
         Assertions.assertEquals(expectedReturnValue, azureConfig.userManagedIdentityClientId());
+    }
+
+    @Test
+    @DisplayName("equalsVerifier")
+    void equalsVerifier() {
+        EqualsVerifier.forClass(AzureConfig.class).verify();
     }
 }

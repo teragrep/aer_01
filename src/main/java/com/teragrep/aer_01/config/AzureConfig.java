@@ -46,6 +46,7 @@
 package com.teragrep.aer_01.config;
 
 import com.teragrep.aer_01.config.source.Sourceable;
+import java.util.Objects;
 
 public final class AzureConfig {
 
@@ -95,5 +96,24 @@ public final class AzureConfig {
 
     public String userManagedIdentityClientId() {
         return userManagedIdentityClientId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final AzureConfig that = (AzureConfig) o;
+        return Objects.equals(namespaceName, that.namespaceName) && Objects.equals(eventHubName, that.eventHubName)
+                && Objects.equals(blobStorageEndpoint, that.blobStorageEndpoint) && Objects.equals(blobStorageContainerName, that.blobStorageContainerName) && Objects.equals(userManagedIdentityClientId, that.userManagedIdentityClientId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(
+                        namespaceName, eventHubName, blobStorageEndpoint, blobStorageContainerName,
+                        userManagedIdentityClientId
+                );
     }
 }
