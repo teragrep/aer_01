@@ -46,6 +46,7 @@
 package com.teragrep.aer_01.config;
 
 import com.teragrep.aer_01.config.source.Sourceable;
+import java.util.Objects;
 
 public final class AzureConfig {
 
@@ -53,12 +54,13 @@ public final class AzureConfig {
     private final String eventHubName;
     private final String blobStorageEndpoint;
     private final String blobStorageContainerName;
+    private final String userManagedIdentityClientId;
 
     public AzureConfig(final Sourceable configSource) {
         this(
                 configSource.source("azure.namespace", "<NAMESPACE NAME>.servicebus.windows.net"),
                 configSource.source("azure.eventhub", "<EVENT HUB NAME>"),
-                configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net"), configSource.source("azure.blobstorage.container", "<CONTAINER NAME>")
+                configSource.source("azure.blobstorage.endpoint", "https://<STORAGE ACCOUNT NAME>.blob.core.windows.net"), configSource.source("azure.blobstorage.container", "<CONTAINER NAME>"), configSource.source("azure.identity.usermanaged", "<USER MANAGED IDENTITY ID>")
         );
     }
 
@@ -66,12 +68,14 @@ public final class AzureConfig {
             final String namespaceName,
             final String eventHubName,
             final String blobStorageEndpoint,
-            final String blobStorageContainerName
+            final String blobStorageContainerName,
+            final String userManagedIdentityClientId
     ) {
         this.namespaceName = namespaceName;
         this.eventHubName = eventHubName;
         this.blobStorageEndpoint = blobStorageEndpoint;
         this.blobStorageContainerName = blobStorageContainerName;
+        this.userManagedIdentityClientId = userManagedIdentityClientId;
     }
 
     public String namespaceName() {
@@ -88,5 +92,28 @@ public final class AzureConfig {
 
     public String blobStorageContainerName() {
         return blobStorageContainerName;
+    }
+
+    public String userManagedIdentityClientId() {
+        return userManagedIdentityClientId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final AzureConfig that = (AzureConfig) o;
+        return Objects.equals(namespaceName, that.namespaceName) && Objects.equals(eventHubName, that.eventHubName)
+                && Objects.equals(blobStorageEndpoint, that.blobStorageEndpoint) && Objects.equals(blobStorageContainerName, that.blobStorageContainerName) && Objects.equals(userManagedIdentityClientId, that.userManagedIdentityClientId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(
+                        namespaceName, eventHubName, blobStorageEndpoint, blobStorageContainerName,
+                        userManagedIdentityClientId
+                );
     }
 }
