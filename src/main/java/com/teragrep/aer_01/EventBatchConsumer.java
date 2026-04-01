@@ -47,12 +47,15 @@ package com.teragrep.aer_01;
 
 import com.azure.messaging.eventhubs.models.EventBatchContext;
 import com.teragrep.aer_01.records.ParsedEventListFromEventBatchFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
 public final class EventBatchConsumer implements AutoCloseable, Consumer<EventBatchContext> {
 
     private final ParsedEventConsumer parsedEventConsumer;
+    private final Logger LOGGER = LoggerFactory.getLogger(EventBatchConsumer.class);
 
     EventBatchConsumer(final ParsedEventConsumer parsedEventConsumer) {
         this.parsedEventConsumer = parsedEventConsumer;
@@ -60,9 +63,11 @@ public final class EventBatchConsumer implements AutoCloseable, Consumer<EventBa
 
     @Override
     public void accept(final EventBatchContext eventBatchContext) {
+        LOGGER.info("EventBatchConsumer accepted new batch.");
         parsedEventConsumer.accept(new ParsedEventListFromEventBatchFactory(eventBatchContext).parsedEvents());
 
         // Update checkpoint after each event batch
+        LOGGER.info("Updating checkpoint after processing event batch.");
         eventBatchContext.updateCheckpoint();
     }
 
