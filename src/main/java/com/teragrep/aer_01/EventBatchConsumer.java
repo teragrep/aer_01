@@ -45,6 +45,7 @@
  */
 package com.teragrep.aer_01;
 
+import com.azure.core.amqp.exception.AmqpException;
 import com.azure.messaging.eventhubs.models.EventBatchContext;
 import com.teragrep.aer_01.records.ParsedEventListFromEventBatchFactory;
 import org.slf4j.Logger;
@@ -68,8 +69,15 @@ public final class EventBatchConsumer implements AutoCloseable, Consumer<EventBa
 
         // Update checkpoint after each event batch
         LOGGER.info("Calling updateCheckpoint after processing event batch.");
-        eventBatchContext.updateCheckpoint();
-        LOGGER.info("UpdateCheckpoint call complete.");
+        try {
+            eventBatchContext.updateCheckpoint();
+            LOGGER.info("UpdateCheckpoint call completed successfully.");
+        }
+        catch (final AmqpException e) {
+            LOGGER.error("UpdateCheckpoint call failed!", e);
+            throw e;
+        }
+
     }
 
     @Override
