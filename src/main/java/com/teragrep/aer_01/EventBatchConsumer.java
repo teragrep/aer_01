@@ -67,8 +67,9 @@ public final class EventBatchConsumer implements AutoCloseable, Consumer<EventBa
         parsedEventConsumer.accept(new ParsedEventListFromEventBatchFactory(eventBatchContext).parsedEvents());
 
         // Update checkpoint after each event batch
-        LOGGER.info("Updating checkpoint after processing event batch.");
+        LOGGER.info("Calling updateCheckpoint after processing event batch.");
         eventBatchContext.updateCheckpoint();
+        LOGGER.info("UpdateCheckpoint call complete.");
     }
 
     @Override

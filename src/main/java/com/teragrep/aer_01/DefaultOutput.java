@@ -89,13 +89,19 @@ public final class DefaultOutput implements Output {
 
     @Override
     public void accept(final RelpBatch batch) {
+        LOGGER.info("DefaultOutput accepted batch.");
         final IManagedRelpConnection connection = relpConnectionPool.get();
+        LOGGER.debug("Preparing to send...");
         connection.ensureSent(batch);
+        LOGGER.debug("Sending done, offering connection back to pool");
         relpConnectionPool.offer(connection);
+        LOGGER.debug("Connection offered to pool.");
     }
 
     @Override
     public void close() {
+        LOGGER.debug("Closing pool...");
         relpConnectionPool.close();
+        LOGGER.debug("Pool closed.");
     }
 }
