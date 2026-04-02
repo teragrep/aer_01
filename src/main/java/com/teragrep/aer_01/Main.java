@@ -100,6 +100,8 @@ public final class Main {
 
         final RelpConnectionConfig relpConnectionConfig = new RelpConnectionConfig(configSource);
 
+        LOGGER.info("Initializing Syslog bridge with max batch size <[{}]>", MAX_BATCH_SIZE);
+
         final JmxReporter jmxReporter = JmxReporter.forRegistry(metricRegistry).build();
         final Slf4jReporter slf4jReporter = Slf4jReporter
                 .forRegistry(metricRegistry)
@@ -111,6 +113,7 @@ public final class Main {
 
         startMetrics(jmxReporter, slf4jReporter, metricRegistry, jettyServer);
 
+        LOGGER.info("Initializing plugin map...");
         final PluginMap pluginMap;
         try {
             pluginMap = new PluginMap(new PluginConfiguration(configSource).asJson());
@@ -118,6 +121,7 @@ public final class Main {
         catch (final IOException e) {
             throw new UncheckedIOException("Initializing PluginMap failed", e);
         }
+        LOGGER.info("Plugin map initialized.");
 
         final Map<String, PluginFactoryConfig> pluginFactoryConfigs = pluginMap.asUnmodifiableMap();
         final String defaultPluginFactoryClassName = pluginMap.defaultPluginFactoryClassName();
@@ -138,7 +142,7 @@ public final class Main {
 
         final Pool<IManagedRelpConnection> relpConnectionPool;
         if (configSource.source("relp.tls.mode", "none").equals("keyVault")) {
-            LOGGER.info("Using keyVault TLS mode");
+            LOGGER.info("RELP connection is set to use keyVault TLS mode");
             relpConnectionPool = new UnboundPool<>(
                     new ManagedRelpConnectionWithMetricsFactory(
                             relpConnectionConfig.asRelpConfig(),
@@ -151,7 +155,7 @@ public final class Main {
             );
         }
         else {
-            LOGGER.info("Using plain mode");
+            LOGGER.info("RELP connection is set to use plain mode");
             relpConnectionPool = new UnboundPool<>(
                     new ManagedRelpConnectionWithMetricsFactory(
                             relpConnectionConfig.asRelpConfig(),
@@ -165,6 +169,7 @@ public final class Main {
 
         final DefaultOutput dOutput = new DefaultOutput(relpConnectionPool);
 
+        LOGGER.info("Starting EventBatchConsumer...");
         try (
                 final EventBatchConsumer PARTITION_PROCESSOR = new EventBatchConsumer(
                         new ParsedEventConsumer(
@@ -180,11 +185,13 @@ public final class Main {
             final ErrorContextConsumer ERROR_HANDLER = new ErrorContextConsumer();
 
             // create credentials using the ManagedIdentityCredentialBuilder
+            LOGGER.info("Building credentials...");
             final TokenCredential credential = new ManagedIdentityCredentialBuilder()
                     .clientId(azureConfig.userManagedIdentityClientId())
                     .build();
 
             // Create a blob container client that you use later to build an event processor client to receive and process events
+            LOGGER.info("Building BlobContainerClient...");
             final BlobContainerAsyncClient blobContainerAsyncClient = new BlobContainerClientBuilder()
                     .credential(credential)
                     .endpoint(azureConfig.blobStorageEndpoint())
@@ -192,6 +199,7 @@ public final class Main {
                     .buildAsyncClient();
 
             // Create an event processor client to receive and process events and errors.
+            LOGGER.info("Building EventProcessorClient...");
             final EventProcessorClient eventProcessorClient = new EventProcessorClientBuilder()
                     .fullyQualifiedNamespace(azureConfig.namespaceName())
                     .eventHubName(azureConfig.eventHubName())
@@ -202,15 +210,19 @@ public final class Main {
                     .credential(credential)
                     .buildEventProcessorClient();
 
+            LOGGER.info("Starting EventProcessorClient...");
             eventProcessorClient.start();
 
+            LOGGER.info("Main thread sleeping");
             Thread.sleep(Long.MAX_VALUE);
 
+            LOGGER.info("Main thread has been awakened. Stopping syslog bridge...");
             eventProcessorClient.stop();
 
             jettyServer.stop();
             slf4jReporter.stop();
             jmxReporter.stop();
+            LOGGER.info("Syslog bridge stopped.");
         }
     }
 
@@ -220,6 +232,7 @@ public final class Main {
             MetricRegistry metricRegistry,
             Server jettyServer
     ) throws Exception {
+        LOGGER.info("Starting metrics for syslog bridge...");
         jmxReporter.start();
         slf4jReporter.start(1, TimeUnit.MINUTES);
 
@@ -235,17 +248,20 @@ public final class Main {
         context.addServlet(servletHolder, "/metrics");
 
         jettyServer.start();
-
+        LOGGER.info("Metrics started for syslog bridge.");
     }
 
     private static Sourceable getConfigSource() {
+        LOGGER.info("Getting config source...");
         final String type = System.getProperty("config.source", "properties");
 
         final Sourceable rv;
         if ("properties".equals(type)) {
+            LOGGER.info("Config source set to properties.");
             rv = new PropertySource();
         }
         else if ("environment".equals(type)) {
+            LOGGER.info("Config source set to environment.");
             rv = new EnvironmentSource();
         }
         else {
