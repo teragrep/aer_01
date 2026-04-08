@@ -1,4 +1,4 @@
-FROM rockylinux:8
+FROM rockylinux/rockylinux:8
 COPY rpm/target/rpm/com.teragrep-aer_01/RPMS/noarch/com.teragrep-aer_01-*.rpm /rpm/
 RUN dnf -y install /rpm/*.rpm && rm -f /dnf/*.rpm && dnf clean all
 USER srv-aer_01
