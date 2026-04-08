@@ -32,7 +32,7 @@
     <log4j2.version>2.25.4</log4j2.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <metrics.version>4.2.8</metrics.version>
+    <metrics.version>4.2.38</metrics.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <prometheus.version>1.5.1</prometheus.version>
     <revision>0.0.1</revision>
