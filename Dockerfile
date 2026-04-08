@@ -1,4 +1,4 @@
-FROM rockylinux/rockylinux:8
+FROM rockylinux/rockylinux:9
 # Update the packages just in case
 RUN dnf -y upgrade
 COPY rpm/target/rpm/com.teragrep-aer_01/RPMS/noarch/com.teragrep-aer_01-*.rpm /rpm/
