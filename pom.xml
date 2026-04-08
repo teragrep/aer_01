@@ -86,13 +86,6 @@
       <artifactId>rlp_01</artifactId>
       <version>5.0.0</version>
     </dependency>
-    <!-- Azure KeyVault -->
-    <!-- https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault/azure-security-keyvault-jca#client-side-ssl -->
-    <dependency>
-      <groupId>com.azure</groupId>
-      <artifactId>azure-security-keyvault-jca</artifactId>
-      <version>2.10.1</version>
-    </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents.core5</groupId>
       <artifactId>httpcore5</artifactId>
@@ -106,20 +99,27 @@
       <version>2.10.1</version>
     </dependency>
     <!-- azure -->
+    <!-- Azure KeyVault -->
+    <!-- https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault/azure-security-keyvault-jca#client-side-ssl -->
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-security-keyvault-jca</artifactId>
+      <version>2.11.0</version>
+    </dependency>
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-messaging-eventhubs</artifactId>
-      <version>5.15.0</version>
+      <version>5.21.3</version>
     </dependency>
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-messaging-eventhubs-checkpointstore-blob</artifactId>
-      <version>1.16.1</version>
+      <version>1.21.5</version>
     </dependency>
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
-      <version>1.8.0</version>
+      <version>1.18.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
