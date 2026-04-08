@@ -61,15 +61,19 @@ import jakarta.json.JsonException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
 public final class ParsedEventConsumer implements AutoCloseable, Consumer<List<ParsedEvent>> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParsedEventConsumer.class);
     private final Output output;
     private final Map<String, WrappedPluginFactoryWithConfig> pluginFactories;
     private final MetricRegistry metricRegistry;
@@ -97,6 +101,8 @@ public final class ParsedEventConsumer implements AutoCloseable, Consumer<List<P
 
     @Override
     public void accept(final List<ParsedEvent> parsedEvents) {
+        LOGGER.info("Received <[{}]> ParsedEvents", parsedEvents.size());
+        final List<SyslogMessage> syslogMessagesToSend = new ArrayList<>();
         for (final ParsedEvent initialEvent : parsedEvents) {
             for (final ParsedEvent parsedEvent : new EventRecords(initialEvent).records()) {
                 WrappedPluginFactoryWithConfig pluginFactoryWithConfig;
@@ -135,12 +141,15 @@ public final class ParsedEventConsumer implements AutoCloseable, Consumer<List<P
                     }
                 }
 
-                sendToOutput(syslogMessages);
+                syslogMessagesToSend.addAll(syslogMessages);
             }
         }
+
+        sendToOutput(syslogMessagesToSend);
     }
 
     private void sendToOutput(final List<SyslogMessage> syslogMessages) {
+        LOGGER.debug("Creating a RelpBatch from SyslogMessages...");
         final RelpBatch batch = new RelpBatch();
 
         for (final SyslogMessage syslogMessage : syslogMessages) {
@@ -171,6 +180,7 @@ public final class ParsedEventConsumer implements AutoCloseable, Consumer<List<P
             batch.insert(syslogMessage.toRfc5424SyslogMessage().getBytes(StandardCharsets.UTF_8));
         }
 
+        LOGGER.debug("Sending RelpBatch to Output");
         output.accept(batch);
     }
 }

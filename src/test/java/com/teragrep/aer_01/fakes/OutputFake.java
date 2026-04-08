@@ -50,6 +50,16 @@ import com.teragrep.rlp_01.RelpBatch;
 
 public final class OutputFake implements Output {
 
+    private int batchesAccepted;
+
+    private OutputFake(final int batchesAccepted) {
+        this.batchesAccepted = batchesAccepted;
+    }
+
+    public OutputFake() {
+        this(0);
+    }
+
     @Override
     public void close() {
         // No functionality for a fake
@@ -57,6 +67,11 @@ public final class OutputFake implements Output {
 
     @Override
     public void accept(final RelpBatch batch) {
+        this.batchesAccepted++;
         // No functionality for a fake
+    }
+
+    public int batchesAccepted() {
+        return this.batchesAccepted;
     }
 }
