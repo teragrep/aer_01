@@ -93,13 +93,6 @@
       <artifactId>httpcore5</artifactId>
       <version>5.3.6</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
-    <!-- handles json stuff -->
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.10.1</version>
-    </dependency>
     <!-- azure -->
     <!-- Azure KeyVault -->
     <!-- https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault/azure-security-keyvault-jca#client-side-ssl -->
