@@ -48,6 +48,7 @@ package com.teragrep.aer_01;
 import com.codahale.metrics.MetricRegistry;
 import com.teragrep.aer_01.config.RelpConnectionConfig;
 import com.teragrep.aer_01.fakes.FakeEventBatchContextFactoryImpl;
+import com.teragrep.aer_01.fakes.OutputFake;
 import com.teragrep.aer_01.plugin.WrappedPluginFactoryWithConfig;
 import com.teragrep.akv_01.plugin.PluginFactoryConfigImpl;
 import com.teragrep.akv_01.plugin.PluginFactoryInitialization;
@@ -288,5 +289,52 @@ public final class EventBatchConsumerTest {
                 );
         Assertions
                 .assertEquals(0L, metricRegistry.counter("com.teragrep.aer_01.DefaultOutput.<[defaultOutput]>.resends").getCount());
+    }
+
+    @Test
+    void testThatOutputIsCalledOnlyOncePerBatch() {
+        final MetricRegistry metricRegistry = new MetricRegistry();
+        // OutputFake to count how many times it's been called
+        final OutputFake output = new OutputFake();
+
+        final EventBatchConsumer edc = new EventBatchConsumer(
+                new ParsedEventConsumer(
+                        output,
+                        new HashMap<>(),
+                        Assertions
+                                .assertDoesNotThrow(
+                                        () -> new WrappedPluginFactoryWithConfig(
+                                                new PluginFactoryInitialization(
+                                                        "com.teragrep.aer_01.plugin.DefaultPluginFactory"
+                                                ).pluginFactory(),
+                                                new PluginFactoryConfigImpl(
+                                                        "com.teragrep.aer_01.plugin.DefaultPluginFactory",
+                                                        "{\"realHostname\":\"localhost\",\"syslogHostname\":\"localhost\",\"syslogAppname\":\"aer-01\"}"
+                                                )
+                                        )
+                                ),
+                        Assertions
+                                .assertDoesNotThrow(
+                                        () -> new WrappedPluginFactoryWithConfig(
+                                                new PluginFactoryInitialization(
+                                                        "com.teragrep.aer_01.plugin.DefaultPluginFactory"
+                                                ).pluginFactory(),
+                                                new PluginFactoryConfigImpl(
+                                                        "com.teragrep.aer_01.plugin.DefaultPluginFactory",
+                                                        "{\"realHostname\":\"localhost\",\"syslogHostname\":\"localhost\",\"syslogAppname\":\"aer-01\"}"
+                                                )
+                                        )
+                                ),
+                        metricRegistry
+                )
+        );
+
+        edc.accept(new FakeEventBatchContextFactoryImpl(10).eventBatchContext());
+
+        Assertions
+                .assertEquals(
+                        1, output.batchesAccepted(),
+                        "Output should only accept one RelpBatch per EventBatchConsumer.accept"
+                );
     }
 }
