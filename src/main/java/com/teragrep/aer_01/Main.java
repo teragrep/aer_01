@@ -71,12 +71,12 @@ import com.teragrep.rlp_01.client.ManagedRelpConnectionStub;
 import com.teragrep.rlp_01.pool.Pool;
 import com.teragrep.rlp_01.pool.UnboundPool;
 import com.teragrep.aer_01.plugin.PluginConfiguration;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.metrics.exporter.servlet.jakarta.PrometheusMetricsServlet;
+import io.prometheus.metrics.instrumentation.dropwizard.DropwizardExports;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,13 +237,13 @@ public final class Main {
         slf4jReporter.start(1, TimeUnit.MINUTES);
 
         // prometheus-exporter
-        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
+        PrometheusRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
 
         final ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         jettyServer.setHandler(context);
 
-        final MetricsServlet metricsServlet = new MetricsServlet();
+        final PrometheusMetricsServlet metricsServlet = new PrometheusMetricsServlet();
         final ServletHolder servletHolder = new ServletHolder(metricsServlet);
         context.addServlet(servletHolder, "/metrics");
 
