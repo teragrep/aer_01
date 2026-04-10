@@ -104,7 +104,7 @@
             </mapping>
           </mappings>
           <requires>
-            <require>java-21-openjdk</require>
+            <require>java-21-openjdk-headless</require>
             <require>tzdata-java</require>
           </requires>
           <preinstallScriptlet>
