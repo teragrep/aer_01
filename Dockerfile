@@ -54,6 +54,7 @@ COPY artifact/com.teragrep-aer_01-*.rpm /artifact/
 RUN dnf install -y /artifact/com.teragrep-aer_01-*.rpm
 COPY container/microjre.pom.xml /container/
 WORKDIR /container
+# Needed by jdeps to find all the modules
 RUN zip -d /opt/teragrep/aer_01/lib/aer_01.jar module-info.class
 RUN mvn -B -f microjre.pom.xml clean package
 
