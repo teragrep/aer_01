@@ -58,6 +58,7 @@
           <defaultGroupname>srv-aer_01</defaultGroupname>
           <defaultFilemode>0644</defaultFilemode>
           <defaultDirmode>0755</defaultDirmode>
+          <autoRequires>false</autoRequires>
           <defineStatements>
             <defineStatement>_build_id_links none</defineStatement>
             <defineStatement>__provides_exclude ^osgi\\(.*$</defineStatement>
