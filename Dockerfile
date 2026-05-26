@@ -50,7 +50,7 @@ FROM rockylinux/rockylinux:9-ubi AS assembly_container
 RUN dnf install -y rpm-build java-21-openjdk-devel java-21-openjdk-jmods maven
 
 # create microjre
-COPY rpm/com.teragrep-aer_01-*.rpm /artifact/
+COPY artifact/com.teragrep-aer_01-*.rpm /artifact/
 RUN dnf install -y /artifact/com.teragrep-aer_01-*.rpm
 COPY container/microjre.pom.xml /container/
 WORKDIR /container
