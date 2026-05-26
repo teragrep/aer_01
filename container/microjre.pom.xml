@@ -43,10 +43,10 @@
               <executable>/usr/lib/jvm/java-21-openjdk/bin/jdeps</executable>
               <arguments>
                 <argument>--multi-release=21</argument>
-                <argument>-quiet</argument>
                 <argument>--print-module-deps</argument>
                 <argument>--ignore-missing-deps</argument>
                 <argument>--recursive</argument>
+                <argument>--class-path=/opt/teragrep/aer_01/lib/aer_01.jar</argument>
                 <argument>/opt/teragrep/aer_01/lib/aer_01.jar</argument>
               </arguments>
               <workingDirectory>${project.build.directory}/${project.artifactId}</workingDirectory>
@@ -107,12 +107,6 @@
           <defaultGroupname>root</defaultGroupname>
           <defaultFilemode>0644</defaultFilemode>
           <defaultDirmode>0755</defaultDirmode>
-          <!--
-          <keyname>${env.RPM_SIGNING_KEYNAME}</keyname>
-          <keyPassphrase>
-            <passphrase>${env.RPM_SIGNING_PASSPHRASE}</passphrase>
-          </keyPassphrase>
-          -->
           <defineStatements>
             <defineStatement>_build_id_links none</defineStatement>
             <defineStatement>__provides_exclude ^osgi\\(.*$</defineStatement>

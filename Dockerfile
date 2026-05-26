@@ -54,12 +54,13 @@ COPY artifact/com.teragrep-aer_01-*.rpm /artifact/
 RUN dnf install -y /artifact/com.teragrep-aer_01-*.rpm
 COPY container/microjre.pom.xml /container/
 WORKDIR /container
+RUN zip -d /opt/teragrep/aer_01/lib/aer_01.jar module-info.class
 RUN mvn -B -f microjre.pom.xml clean package
 
 # patch runtime_image
 RUN mkdir -p /sysroot
 COPY --from=runtime_image / /sysroot
-RUN dnf install --releasever 9 --setopt install_weak_deps=false --nodocs --installroot /sysroot -y /container/target/rpm/com.teragrep-aer_01_microjre/RPMS/x86_64/com.teragrep-aer_01_microjre-*.rpm /artifact/com.teragrep-aer_01-*.rpm
+RUN dnf install --releasever 9 --setopt install_weak_deps=false --nodocs --installroot /sysroot -y shadow-utils /container/target/rpm/com.teragrep-aer_01_microjre/RPMS/x86_64/com.teragrep-aer_01_microjre-*.rpm /artifact/com.teragrep-aer_01-*.rpm
 RUN dnf --installroot /sysroot clean all
 
 # switch to runtime
