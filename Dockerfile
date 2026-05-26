@@ -50,8 +50,8 @@ FROM rockylinux/rockylinux:9-ubi AS assembly_container
 RUN dnf install -y rpm-build java-21-openjdk-devel java-21-openjdk-jmods maven
 
 # create microjre
-COPY rpm/com.teragrep-aer_01-*.rpm /rpm/
-RUN dnf install -y /rpm/com.teragrep-aer_01-*.rpm
+COPY rpm/com.teragrep-aer_01-*.rpm /artifact/
+RUN dnf install -y /artifact/com.teragrep-aer_01-*.rpm
 COPY container/microjre.pom.xml /container/
 WORKDIR /container
 RUN mvn -B -f microjre.pom.xml clean package
@@ -59,7 +59,7 @@ RUN mvn -B -f microjre.pom.xml clean package
 # patch runtime_image
 RUN mkdir -p /sysroot
 COPY --from=runtime_image / /sysroot
-RUN dnf install --releasever 9 --setopt install_weak_deps=false --nodocs --installroot /sysroot -y /container/target/rpm/com.teragrep-aer_01_microjre/RPMS/x86_64/com.teragrep-aer_01_microjre-*.rpm /rpm/com.teragrep-aer_01-*.rpm
+RUN dnf install --releasever 9 --setopt install_weak_deps=false --nodocs --installroot /sysroot -y /container/target/rpm/com.teragrep-aer_01_microjre/RPMS/x86_64/com.teragrep-aer_01_microjre-*.rpm /artifact/com.teragrep-aer_01-*.rpm
 RUN dnf --installroot /sysroot clean all
 
 # switch to runtime
