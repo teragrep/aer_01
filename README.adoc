@@ -28,7 +28,7 @@ See the official documentation on https://docs.teragrep.com[docs.teragrep.com].
 == Limitations
 
 // If your project has limitations, please list them. Otherwise, remove this section.
-* Currently only a default `Plugin` is included in the project. If other type of additional message processing is required,
+* Currently, `NLFPlugin` is the default plugin, with a fallback to `DefaultPlugin` is used. If other type of additional message processing is required,
 a class implementing `Plugin` and `PluginFactory` must be created and added to the configuration file.
 * Only a single Event Hub is read from
 * Uses the default Consumer Group `"$Default"`
