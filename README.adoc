@@ -18,7 +18,8 @@ Additional processing of the events can be performed based on the `resourceId` o
 * Allows sending said Syslog-formatted messages to a RELP server.
 * Allows the usage of a certificate from Azure KeyVault for TLS encryption.
 * Provides an HTTP endpoint for Prometheus metrics (`/metrics`).
-* Implements https://github.com/teragrep/akv_01[AKV_01] and https://github.com/teragrep/nlf_01[NLF_01] libraries for additional syslog message processing based on `resourceId` from events received from EventHub.
+* Defaults to using the https://github.com/teragrep/nlf_01[NLF_01] plugin, and falls back to the default plugin implementation if an EventType is not recognized.
+* https://github.com/teragrep/akv_01[AKV_01] library exists for additional syslog message processing based on the `resourceId` field, but is not used in AER_01.
 
 == Documentation
 
