@@ -33,7 +33,7 @@ a class implementing `Plugin` and `PluginFactory` must be created and added to t
 * Only a single Event Hub is read from
 * Uses the default Consumer Group `"$Default"`
 
-== How to [compile/use/implement]
+== How to
 
 // add instructions how people can start to use your project
 
