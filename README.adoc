@@ -1,0 +1,186 @@
+// Before publishing your new repository:
+// 1. Write the readme file
+// 2. Update the issues link in Contributing section in the readme file
+// 3. Update the discussion link in config.yml file in .github/ISSUE_TEMPLATE directory
+
+= AER_01 (Teragrep Azure Event Hub Reader)
+
+// Add a short description of your project. Tell what your project does and what it's used for.
+
+Allows conversion of Azure EventHub events to Syslog messages and sending them to a RELP server.
+Additional processing of the events can be performed based on the `resourceId` of the event and an assigned `Plugin`.
+
+== Features
+
+// List your project's features
+* Receives events from Azure EventHub by registering itself as an EventProcessorClient.
+* Converts said events to Syslog format.
+* Allows sending said Syslog-formatted messages to a RELP server.
+* Allows the usage of a certificate from Azure KeyVault for TLS encryption.
+* Provides an HTTP endpoint for Prometheus metrics (`/metrics`).
+* Implements https://github.com/teragrep/akv_01[AKV_01] and https://github.com/teragrep/nlf_01[NLF_01] libraries for additional syslog message processing based on `resourceId` from events received from EventHub.
+
+== Documentation
+
+See the official documentation on https://docs.teragrep.com[docs.teragrep.com].
+
+== Limitations
+
+// If your project has limitations, please list them. Otherwise, remove this section.
+* Currently only a default `Plugin` is included in the project. If other type of additional message processing is required,
+a class implementing `Plugin` and `PluginFactory` must be created and added to the configuration file.
+* Only a single Event Hub is read from
+* Uses the default Consumer Group `"$Default"`
+
+== How to [compile/use/implement]
+
+// add instructions how people can start to use your project
+
+=== Compile using Maven
+
+The project can be compiled using Maven. It is recommended to use Java 21.
+[source,bash]
+----
+$ JAVA_HOME=/usr/lib/jvm/java-21-openjdk mvn clean package
+----
+
+=== Create a container image with Podman
+
+The project is released as a container image to GHCR, but can be build locally as well.
+
+[source,bash]
+----
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk;
+mvn --batch-mode clean package;
+cd rpm/;
+mvn --batch-mode -f rpm.pom.xml package;
+cd ..;
+podman build --tag aer_01:dev;
+----
+
+=== Usage in Azure
+
+The project must be deployed as a container. The container requires or supports the following Environment variables:
+
+|===
+|Environment variable |Description |Default value |Possible values
+
+|AZURE_NAMESPACE
+|Specifies the Event Hub Namespace service bus URI. By default, a non-valid URI `"<NAMESPACE NAME>.servicebus.windows.net"` is used.
+|`"<NAMESPACE NAME>.servicebus.windows.net"`
+|Any valid URI to an Event Hub Namespace
+
+|AZURE_EVENTHUB
+|Specifies the Event Hub that is going to be read. By default, `"<EVENT HUB NAME>"` is used. Must be provided.
+|`"<EVENT HUB NAME>"`
+|Any valid EventHub name
+
+|AZURE_BLOBSTORAGE_CONTAINER
+|Specifies the container for the checkpoint store
+|`"<CONTAINER NAME>"`
+|Any valid container name
+
+|AZURE_BLOBSTORAGE_ENDPOINT
+|Specifies the endpoint for the checkpoint store blob storage
+|`"https://<STORAGE ACCOUNT NAME>.blob.core.windows.net"`
+|Any valid blob storage endpoint URI
+
+|RELP_TLS_MODE
+|Specifies which TLS implementation should be used. By default, no encryption is used.
+|`none`
+|`none`, `keyVault`
+
+|PLUGINS_CONFIG_PATH
+|Specifies the plugin configuration file path.
+By default, no configuration is loaded and the DefaultPlugin is used for all resourceIds.
+|`""`
+|valid path, `""`
+
+|RELP_CONNECTION_TIMEOUT
+|Specifies the time to wait before timing out connection in milliseconds.
+|2500
+|milliseconds (positive integer)
+
+|RELP_TRANSACTION_READ_TIMEOUT
+|Time to wait for destination to acknowledge sent data in milliseconds. Low values may cause duplicates.
+|1500
+|milliseconds (positive integer)
+
+|RELP_TRANSACTION_WRITE_TIMEOUT
+|Time to wait for destination to accept data in milliseconds.
+|1500
+|milliseconds (positive integer)
+
+|RELP_CONNECTION_RETRY_INTERVAL
+|Time to wait between reconnection attempts in milliseconds.
+|500
+|milliseconds (positive integer)
+
+|RELP_CONNECTION_PORT
+|RELP connection destination port
+|601
+|valid destination port
+
+|RELP_CONNECTION_ADDRESS
+|RELP connection destination address
+|localhost
+|valid destination address
+
+|RELP_REBIND_REQUEST_AMOUNT
+|Rebinds the RELP connection after this amount of records is sent,
+provided that `RELP_REBIND_ENABLED` is set to `true`.
+|100000
+|valid amount of records
+
+|RELP_REBIND_ENABLED
+|Rebinds the RELP connection after `RELP_REBIND_REQUEST_AMOUNT` of records exceeded.
+|`true`
+|`true`, `false`
+
+|RELP_MAX_IDLE_DURATION
+|Reconnects to the RELP server before sending messages if the set duration has passed without sending any messages.
+|`PT2M30S`
+|`java.time.Duration` String representation (`PTnHnMnS`) If `n=0`, it can be omitted.
+
+|RELP_MAX_IDLE_ENABLED
+|Enable reconnections if duration described by `RELP_MAX_IDLE_DURATION` passes without sending any messages.
+|false
+|`true`, `false`
+
+|RELP_CONNECTION_KEEPALIVE
+|Enable sending alive packets to RELP server
+|true
+|`true`, `false`
+
+|SYSLOG_APPNAME
+|Default app name to be used in the resulting syslog messages. May be overridden by a Plugin implementation.
+|aer-01
+|any string
+
+|SYSLOG_HOSTNAME
+|Default hostname to be used in the resulting syslog messages. May be overridden by a Plugin implementation.
+|localhost.localdomain
+|any string
+|===
+
+
+== Contributing
+
+// Change the repository name in the issues link to match with your project's name
+
+You can involve yourself with our project by https://github.com/teragrep/aer_01/issues/new/choose[opening an issue] or submitting a pull request.
+
+Contribution requirements:
+
+. *All changes must be accompanied by a new or changed test.* If you think testing is not required in your pull request, include a sufficient explanation as why you think so.
+. Security checks must pass
+. Pull requests must align with the principles and http://www.extremeprogramming.org/values.html[values] of extreme programming.
+. Pull requests must follow the principles of Object Thinking and Elegant Objects (EO).
+
+Read more in our https://github.com/teragrep/teragrep/blob/main/contributing.adoc[Contributing Guideline].
+
+=== Contributor License Agreement
+
+Contributors must sign https://github.com/teragrep/teragrep/blob/main/cla.adoc[Teragrep Contributor License Agreement] before a pull request is accepted to organization's repositories.
+
+You need to submit the CLA only once. After submitting the CLA you can contribute to all Teragrep's repositories.
