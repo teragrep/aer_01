@@ -3,7 +3,7 @@
 // 2. Update the issues link in Contributing section in the readme file
 // 3. Update the discussion link in config.yml file in .github/ISSUE_TEMPLATE directory
 
-= AER_01 (Teragrep Azure Event Hub Reader)
+= AER_01 (Teragrep syslog bridge for Microsoft Azure EventHub)
 
 // Add a short description of your project. Tell what your project does and what it's used for.
 
