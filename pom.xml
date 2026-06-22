@@ -29,13 +29,13 @@
   <properties>
     <changelist>-SNAPSHOT</changelist>
     <java.version>21</java.version>
-    <junit.version>6.0.3</junit.version>
-    <log4j2.version>2.25.4</log4j2.version>
+    <junit.version>6.1.0</junit.version>
+    <log4j2.version>2.26.0</log4j2.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <metrics.version>4.2.38</metrics.version>
+    <metrics.version>4.2.39</metrics.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <prometheus.version>1.6.1</prometheus.version>
+    <prometheus.version>1.8.0</prometheus.version>
     <revision>0.0.1</revision>
     <sha1></sha1>
   </properties>
@@ -88,6 +88,7 @@
       <artifactId>rlp_01</artifactId>
       <version>5.0.0</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5 -->
     <dependency>
       <groupId>org.apache.httpcomponents.core5</groupId>
       <artifactId>httpcore5</artifactId>
@@ -96,6 +97,7 @@
     <!-- azure -->
     <!-- Azure KeyVault -->
     <!-- https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault/azure-security-keyvault-jca#client-side-ssl -->
+    <!-- Source: https://mvnrepository.com/artifact/com.azure/azure-security-keyvault-jca -->
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-security-keyvault-jca</artifactId>
@@ -117,7 +119,7 @@
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
-      <version>1.18.3</version>
+      <version>1.18.4</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -125,11 +127,13 @@
       <artifactId>rlo_14</artifactId>
       <version>1.0.1</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
       <version>${metrics.version}</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-jmx -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-jmx</artifactId>
@@ -154,7 +158,7 @@
     <dependency>
       <groupId>org.eclipse.jetty.ee10</groupId>
       <artifactId>jetty-ee10-servlet</artifactId>
-      <version>12.1.8</version>
+      <version>12.1.10</version>
       <scope>compile</scope>
     </dependency>
     <!-- tests -->
@@ -202,14 +206,14 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.0.17</version>
+      <version>2.0.18</version>
     </dependency>
     <!-- Maven stuff -->
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-enforcer-plugin -->
     <dependency>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-enforcer-plugin</artifactId>
-      <version>3.6.2</version>
+      <version>3.6.3</version>
     </dependency>
   </dependencies>
   <build>
