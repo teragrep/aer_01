@@ -30,7 +30,7 @@
     <changelist>-SNAPSHOT</changelist>
     <java.version>21</java.version>
     <junit.version>6.1.0</junit.version>
-    <log4j2.version>2.25.4</log4j2.version>
+    <log4j2.version>2.26.0</log4j2.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <metrics.version>4.2.38</metrics.version>
