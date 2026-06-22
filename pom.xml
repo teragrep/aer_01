@@ -88,6 +88,7 @@
       <artifactId>rlp_01</artifactId>
       <version>5.0.0</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5 -->
     <dependency>
       <groupId>org.apache.httpcomponents.core5</groupId>
       <artifactId>httpcore5</artifactId>
@@ -96,6 +97,7 @@
     <!-- azure -->
     <!-- Azure KeyVault -->
     <!-- https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault/azure-security-keyvault-jca#client-side-ssl -->
+    <!-- Source: https://mvnrepository.com/artifact/com.azure/azure-security-keyvault-jca -->
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-security-keyvault-jca</artifactId>
@@ -125,11 +127,13 @@
       <artifactId>rlo_14</artifactId>
       <version>1.0.1</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
       <version>${metrics.version}</version>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-jmx -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-jmx</artifactId>
