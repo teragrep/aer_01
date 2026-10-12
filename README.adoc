@@ -7,16 +7,16 @@
 
 // Add a short description of your project. Tell what your project does and what it's used for.
 
-Allows conversion of Azure EventHub events to Syslog messages and sending them to a RELP server.
+Allows conversion of Microsoft Azure EventHub events to Syslog messages and sending them to a RELP server.
 Additional processing of the events can be performed based on the `resourceId` of the event and an assigned `Plugin`.
 
 == Features
 
 // List your project's features
-* Receives events from Azure EventHub by registering itself as an EventProcessorClient.
+* Receives events from Microsoft Azure EventHub by registering itself as an EventProcessorClient.
 * Converts said events to Syslog format.
 * Allows sending said Syslog-formatted messages to a RELP server.
-* Allows the usage of a certificate from Azure KeyVault for TLS encryption.
+* Allows the usage of a certificate from Microsoft Azure KeyVault for TLS encryption.
 * Provides an HTTP endpoint for Prometheus metrics (`/metrics`).
 * Defaults to using the https://github.com/teragrep/nlf_01[NLF_01] plugin, and falls back to the default plugin implementation if an EventType is not recognized.
 * https://github.com/teragrep/akv_01[AKV_01] library exists for additional syslog message processing based on the `resourceId` field, but is not used in AER_01.
@@ -37,9 +37,9 @@ a class implementing `Plugin` and `PluginFactory` must be created and added to t
 
 // add instructions how people can start to use your project
 
-=== Compile using Maven
+=== Compile using Apache Maven
 
-The project can be compiled using Maven. It is recommended to use Java 21.
+The project can be compiled using Apache Maven. It is recommended to use Java 21.
 [source,bash]
 ----
 $ JAVA_HOME=/usr/lib/jvm/java-21-openjdk mvn clean package
@@ -47,7 +47,7 @@ $ JAVA_HOME=/usr/lib/jvm/java-21-openjdk mvn clean package
 
 === Create a container image with Podman
 
-The project is released as a container image to GHCR, but can be build locally as well.
+The project is released as a container image to GitHub Container Registry (GHCR), but can be build locally as well.
 
 [source,bash]
 ----
@@ -59,7 +59,7 @@ cd ..;
 podman build --tag aer_01:dev;
 ----
 
-=== Usage in Azure
+=== Usage in Microsoft Azure
 
 The project must be deployed as a container. The container requires or supports the following Environment variables:
 
@@ -67,17 +67,17 @@ The project must be deployed as a container. The container requires or supports 
 |Environment variable |Description |Default value |Possible values
 
 |AZURE_NAMESPACE
-|Specifies the Event Hub Namespace service bus URI. By default, a non-valid URI `"<NAMESPACE NAME>.servicebus.windows.net"` is used.
+|Specifies the Microsoft Azure Event Hub Namespace service bus URI. By default, a non-valid URI `"<NAMESPACE NAME>.servicebus.windows.net"` is used.
 |`"<NAMESPACE NAME>.servicebus.windows.net"`
 |Any valid URI to an Event Hub Namespace
 
 |AZURE_EVENTHUB
-|Specifies the Event Hub that is going to be read. By default, `"<EVENT HUB NAME>"` is used. Must be provided.
+|Specifies the Microsoft Azure Event Hub that is going to be read. By default, `"<EVENT HUB NAME>"` is used. Must be provided.
 |`"<EVENT HUB NAME>"`
 |Any valid EventHub name
 
 |AZURE_BLOBSTORAGE_CONTAINER
-|Specifies the container for the checkpoint store
+|Specifies the Microsoft Azure Storage Account container for the checkpoint store
 |`"<CONTAINER NAME>"`
 |Any valid container name
 
