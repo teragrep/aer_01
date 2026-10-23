@@ -306,6 +306,7 @@
             <exclude>**/log4j2.xml</exclude>
             <!-- Docker -->
             <exclude>Dockerfile</exclude>
+            <exclude>container/microjre.pom.xml</exclude>
             <!-- rpm -->
             <exclude>rpm/**</exclude>
             <!-- formatter -->
